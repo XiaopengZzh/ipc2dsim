@@ -14,7 +14,7 @@
 GLFWwindow* renderInit();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-//void mouse_callback(GLFWwindow* window, double xposIn, double ypos);
-//void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_callback(GLFWwindow* window, double xposIn, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 #endif //IPC2DSIM_RENDERINIT_H

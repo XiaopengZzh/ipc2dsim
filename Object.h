@@ -40,6 +40,12 @@ class Object
 {
 public:
 
+    // duplicated
+    //glm::vec3 location;
+    //glm::quat rotation;
+
+    //void setlocation(glm::vec3 loc);
+
     // mesh
     std::vector<glm::vec3> vertices;
     std::vector<elementIndex> elementIndices;

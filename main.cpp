@@ -29,6 +29,10 @@ int main(int argc, char* argv[])
 
     while(!bShouldClose)
     {
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         processInput(window);
 
         glClearColor(0.3f, 0.4f, 0.4f, 1.0f);

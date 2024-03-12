@@ -13,5 +13,5 @@ void modelInit()
     simshader.use();
 
     world->CreateObject("../model/rabbit.xyz", EObjectType::DYNAMIC, simshader);
-
+    //world->CreateObject("../model/tetrahedron.xyz", EObjectType::STATIC, simshader);
 }
