@@ -32,6 +32,8 @@ public:
 
     void Draw(Camera &cam);
 
+    //void simulate();
+
     std::vector<Object> objList;
 
 

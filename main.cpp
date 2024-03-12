@@ -40,6 +40,13 @@ int main(int argc, char* argv[])
 
         world->Draw(camera);
 
+        /*
+        world->objList[0].vertices[0] = glm::vec2(-1.0f, 1.0f) + glm::vec2(glm::cos(currentFrame), glm::sin(currentFrame));
+        world->objList[0].vertices[1] = glm::vec2(-1.0f, -1.0f) + glm::vec2(glm::cos(currentFrame), glm::sin(currentFrame));
+        world->objList[0].vertices[2] = glm::vec2(1.0f, 1.0f) + glm::vec2(glm::cos(currentFrame), glm::sin(currentFrame));
+        world->objList[0].updateVertexBuffer();
+         */
+
         glfwSwapBuffers(window);
         glfwPollEvents();
         bShouldClose = glfwWindowShouldClose(window);
