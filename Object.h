@@ -40,7 +40,7 @@ class Object
 {
 public:
 
-    std::vector<glm::vec2> vertices;
+    std::vector<Eigen::Vector2f> vertices;
     std::vector<elementIndex> elementIndices;
     unsigned int VAO;
     unsigned int VBO;

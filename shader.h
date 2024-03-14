@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iostream>
 #include "glm/glm.hpp"
+#include "eigen-3.4.0/Eigen/Core"
 
 class shader
 {
@@ -28,8 +29,8 @@ public:
     void setBool(const std::string &name, bool value) const;
     void setInt(const std::string &name, int value) const;
     void setFloat(const std::string &name, float value) const;
-    void setMat4(const std::string &name, const glm::mat4 &mat) const;
-    void setVec3(const std::string &name, const glm::vec3 &value) const;
+    void setMat4(const std::string &name, const Eigen::Matrix4f &mat) const;
+    void setVec3(const std::string &name, const Eigen::Vector3f &value) const;
     void setVec3(const std::string &name, float x, float y, float z) const;
     
 };

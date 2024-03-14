@@ -28,11 +28,11 @@ class Camera
 {
 public:
 
-    glm::vec3 Position;
-    glm::vec3 Front;
-    glm::vec3 Up;
-    glm::vec3 Right;
-    glm::vec3 WorldUp;
+    Eigen::Vector3f Position;
+    Eigen::Vector3f Front;
+    Eigen::Vector3f Up;
+    Eigen::Vector3f Right;
+    Eigen::Vector3f WorldUp;
 
     float Yaw;
     float Pitch;
@@ -41,8 +41,8 @@ public:
     float MouseSensitivity;
     float Zoom;
 
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH)\
-        : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    explicit Camera(Eigen::Vector3f position = Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f up = Eigen::Vector3f(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH)\
+        : Front(Eigen::Vector3f(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
         Position = position;
         WorldUp = up;
@@ -51,19 +51,38 @@ public:
         UpdateCameraVectors();
     }
 
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(Eigen::Vector3f(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
-        Position = glm::vec3(posX, posY, posZ);
-        WorldUp = glm::vec3(upX, upY, upZ);
+        Position = Eigen::Vector3f(posX, posY, posZ);
+        WorldUp = Eigen::Vector3f(upX, upY, upZ);
         Yaw = yaw;
         Pitch = pitch;
         UpdateCameraVectors();
     }
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
+    Eigen::Matrix4f GetViewMatrix()
     {
-        return glm::lookAt(Position, Position + Front, Up);
+        Eigen::Vector3f f = Front.normalized();
+        Eigen::Vector3f u = Up.normalized();
+        Eigen::Vector3f s = f.cross(u).normalized();
+        u = s.cross(f);
+
+        Eigen::Matrix4f mat = Eigen::Matrix4f::Identity();
+        mat(0, 0) = s.x();
+        mat(0, 1) = s.y();
+        mat(0, 2) = s.z();
+        mat(1, 0) = u.x();
+        mat(1, 1) = u.y();
+        mat(1, 2) = u.z();
+        mat(2, 0) = -f.x();
+        mat(2, 1) = -f.y();
+        mat(2, 2) = -f.z();
+        mat(0, 3) = -s.dot(Position);
+        mat(1, 3) = -u.dot(Position);
+        mat(2, 3) = f.dot(Position);
+
+        return mat;
     }
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -119,14 +138,14 @@ private:
 
     void UpdateCameraVectors()
     {
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = glm::normalize(front);
+        Eigen::Vector3f front;
+        front[0] = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front[1] = sin(glm::radians(Pitch));
+        front[2] = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        Front = front.normalized();
 
-        Right = glm::normalize(glm::cross(Front, WorldUp));
-        Up = glm::normalize(glm::cross(Right, Front));
+        Right = Front.cross(WorldUp).normalized();
+        Up = Right.cross(Front).normalized();
     }
 
 };
