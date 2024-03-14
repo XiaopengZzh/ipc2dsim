@@ -13,6 +13,7 @@ target_sources(${PROJECT_NAME}
 		Object.h
 		world.h
 		modelInit.h
+		utils.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -22,6 +23,10 @@ target_sources(${PROJECT_NAME}
 		modelInit.cpp
 )
 
+target_link_directories(${PROJECT_NAME}
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.4.0
+)
 
 if(APPLE OR WIN32)
 
