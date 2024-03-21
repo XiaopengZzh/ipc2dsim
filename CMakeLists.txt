@@ -14,6 +14,12 @@ target_sources(${PROJECT_NAME}
 		world.h
 		modelInit.h
 		utils.h
+		Energy/elasticity.h
+		Energy/gravity.h
+		Energy/inertia.h
+		Energy/sparseMatrix.h
+		Energy/spring.h
+		Energy/barrier.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -21,11 +27,13 @@ target_sources(${PROJECT_NAME}
 		Object.cpp
 		world.cpp
 		modelInit.cpp
+		Energy/gravity.cpp
 )
 
 target_link_directories(${PROJECT_NAME}
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.4.0
+		${CMAKE_CURRENT_SOURCE_DIR}/Energy
 )
 
 if(APPLE OR WIN32)
