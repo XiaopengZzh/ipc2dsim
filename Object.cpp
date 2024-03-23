@@ -91,7 +91,7 @@ void Object::Draw(Camera &cam)
 
     glBindVertexArray(VAO);
 
-    glDrawElements(GL_TRIANGLES, vertices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, elementIndices.size() * 3, GL_UNSIGNED_INT, 0);
 }
 
 void Object::updateVertexBuffer()
