@@ -5,6 +5,19 @@
 #include "Object.h"
 #include <fstream>
 
+bool bInEdges(unsigned int a, unsigned int b, std::vector<std::pair<unsigned int, unsigned int>>& edges)
+{
+    for(auto edge : edges)
+    {
+        if((edge.first == a && edge.second == b) || (edge.first == b && edge.second == a))
+            return true;
+    }
+    return false;
+}
+
+
+
+
 Eigen::Matrix4f perspectiveMat(float fov, float aspect, float near, float far)
 {
     Eigen::Matrix4f mat = Eigen::Matrix4f::Zero();
@@ -50,6 +63,23 @@ Object::Object(const std::string &filename, EObjectType type, shader shaderInsta
     }
 
     setupObject();
+
+    for(auto ind : elementIndices)
+    {
+        if(!bInEdges(ind.indices[0], ind.indices[1], edges))
+        {
+            edges.emplace_back(ind.indices[0], ind.indices[1]);
+        }
+        if(!bInEdges(ind.indices[2], ind.indices[1], edges))
+        {
+            edges.emplace_back(ind.indices[2], ind.indices[1]);
+        }
+        if(!bInEdges(ind.indices[0], ind.indices[2], edges))
+        {
+            edges.emplace_back(ind.indices[0], ind.indices[2]);
+        }
+    }
+
 }
 
 

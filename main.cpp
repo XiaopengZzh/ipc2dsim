@@ -2,10 +2,9 @@
 #include "renderinit.h"
 #include "modelInit.h"
 #include "world.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#include "utils.h"
+
 #include "eigen-3.4.0/Eigen/Dense"
+#include <chrono>
 
 extern Camera camera;
 extern float deltaTime, lastFrame;
@@ -26,25 +25,43 @@ int main(int argc, char* argv[])
     std::shared_ptr<world> world = world::GetWorldInstance();
     modelInit();
 
+    world->physRegistration();
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = startTime;
+    auto previousTime = startTime;
+    float elapsedTime = 0.0f;
+    float dt = 0.0f;
+    unsigned int totalFrameCount = 0;
+
+
     bool bShouldClose = false;
     printf("Simulation begins...\n");
 
     while(!bShouldClose)
     {
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        currentTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
+        unsigned int dt_ms = duration.count();
+        dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
+        deltaTime = dt;//used for camera moving
+        previousTime = currentTime;
+        elapsedTime += dt;
 
         processInput(window);
 
         glClearColor(0.3f, 0.4f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        world->simulate(dt);
+
         world->Draw(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
         bShouldClose = glfwWindowShouldClose(window);
+
+        totalFrameCount++;
     }
 
     printf("Simulation ends.\n");

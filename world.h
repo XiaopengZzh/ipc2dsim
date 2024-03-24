@@ -5,14 +5,11 @@
 #ifndef IPC2DSIM_WORLD_H
 #define IPC2DSIM_WORLD_H
 
+#include "Object.h"
 #include <memory>
 #include <vector>
 #include <iostream>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "Object.h"
-#include "shader.h"
+#include "phyScene.h"
 
 class world
 {
@@ -30,12 +27,14 @@ public:
 
     void CreateObject(const std::string &filename, EObjectType type, shader shaderInstance);
 
+    void physRegistration();
+
     void Draw(Camera &cam);
 
-    //void simulate();
+    void simulate(float dt);
 
     std::vector<Object> objList;
-
+    phyScene physics;
 
 private:
     world();

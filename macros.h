@@ -16,4 +16,5 @@ const unsigned int SCR_HEIGHT = 600;
 
 
 
+
 #endif //IPC2DSIM_MACROS_H

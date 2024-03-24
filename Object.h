@@ -13,6 +13,7 @@
 #include <vector>
 #include "shader.h"
 #include "camera.h"
+//#include "utils.h"
 
 struct elementIndex
 {
@@ -42,6 +43,7 @@ public:
 
     std::vector<Eigen::Vector2f> vertices;
     std::vector<elementIndex> elementIndices;
+    std::vector<std::pair<unsigned int, unsigned int>> edges;
     unsigned int VAO;
     unsigned int VBO;
 

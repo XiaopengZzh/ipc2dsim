@@ -20,6 +20,7 @@ target_sources(${PROJECT_NAME}
 		Energy/sparseMatrix.h
 		Energy/spring.h
 		Energy/barrier.h
+		phyScene.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -28,6 +29,7 @@ target_sources(${PROJECT_NAME}
 		world.cpp
 		modelInit.cpp
 		Energy/gravity.cpp
+		phyScene.cpp
 )
 
 target_link_directories(${PROJECT_NAME}
