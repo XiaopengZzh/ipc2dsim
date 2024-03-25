@@ -40,7 +40,7 @@ void world::initialStretch(float factor)
 void world::physRegistration()
 {
     unsigned int totalNumVerts = 0;
-    for(auto obj : objList)
+    for(auto& obj : objList)
     {
         for(auto edge : obj.edges)
         {
@@ -48,7 +48,8 @@ void world::physRegistration()
             physics.squaredRestLengths.emplace_back(diff.dot(diff));
         }
 
-        initialStretch(1.4f);
+        //initialStretch(1.4f);
+        obj.stretch(1.4f);
 
         physics.vertices.insert(physics.vertices.end(), obj.vertices.begin(), obj.vertices.end());
         append(physics.edges, obj.edges);

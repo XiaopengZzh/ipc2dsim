@@ -130,3 +130,12 @@ void Object::updateVertexBuffer()
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Eigen::Vector2f), vertices.data());
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+void Object::stretch(float factor)
+{
+    for(auto& vert : vertices)
+    {
+        vert[0] *= factor;
+    }
+    updateVertexBuffer();
+}

@@ -58,6 +58,8 @@ public:
 
     void updateVertexBuffer();
 
+    void stretch(float factor);
+
 private:
     void setupObject();
 

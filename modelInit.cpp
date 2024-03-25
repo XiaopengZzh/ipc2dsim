@@ -12,6 +12,6 @@ void modelInit()
     shader simshader("../shaders/vertex.vs", "../shaders/fragment.fs");
     simshader.use();
 
-    world->CreateObject("../model/pier.xyz", EObjectType::DYNAMIC, simshader);
+    world->CreateObject("../model/cube.xyz", EObjectType::DYNAMIC, simshader);
     //world->CreateObject("../model/tetrahedron.xyz", EObjectType::STATIC, simshader);
 }
