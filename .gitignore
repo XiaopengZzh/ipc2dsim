@@ -5,3 +5,7 @@
 **/.DS_Store
 
 .idea/
+
+lib/libglfw3.a
+/eigen-3.4.0/
+/glm/
