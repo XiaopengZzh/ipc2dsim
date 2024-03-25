@@ -28,6 +28,9 @@ public:
     void CreateObject(const std::string &filename, EObjectType type, shader shaderInstance);
 
     void physRegistration();
+    void broadcastLocations();
+    void initialStretch(float factor);
+
 
     void Draw(Camera &cam);
 

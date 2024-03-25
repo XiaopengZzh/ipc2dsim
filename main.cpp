@@ -53,7 +53,8 @@ int main(int argc, char* argv[])
         glClearColor(0.3f, 0.4f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        world->simulate(dt);
+        //world->simulate(dt);
+        world->simulate(0.004f);
 
         world->Draw(camera);
 
