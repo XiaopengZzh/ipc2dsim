@@ -46,12 +46,12 @@ std::vector<Eigen::Vector2f> springEngGrad(std::vector<Eigen::Vector2f>& x,
     return res;
 }
 
-sparseMat springEngHess(std::vector<Eigen::Vector2f>& x,
-                        std::vector<Eigen::Vector2i>& edges,
-                        std::vector<float>& l_sq,
-                        std::vector<float>& k)
+simsparseMat springEngHess(std::vector<Eigen::Vector2f>& x,
+                           std::vector<Eigen::Vector2i>& edges,
+                           std::vector<float>& l_sq,
+                           std::vector<float>& k)
 {
-    sparseMat res;
+    simsparseMat res;
     for(int i = 0; i < 16 * edges.size(); i++)
     {
         res.loc_i.push_back(0);
@@ -68,7 +68,7 @@ sparseMat springEngHess(std::vector<Eigen::Vector2f>& x,
         temp.topRightCorner(2, 2) = -H_diff;
         temp.bottomLeftCorner(2, 2) = - H_diff;
         temp.bottomRightCorner(2, 2) = H_diff;
-        Eigen::Matrix4f H_local = spdProjection(temp);
+        Eigen::Matrix4f H_local = mySPDProjection(temp);
 
         for(int nI = 0; nI < 2; nI++)
         {

@@ -51,9 +51,9 @@ std::vector<Eigen::Vector2f> barrierEngGrad(std::vector<Eigen::Vector2f>& x,
     return res;
 }
 
-sparseMat barrierEngHess(std::vector<Eigen::Vector2f>& x, float y_ground, std::vector<float>& contact_area)
+simsparseMat barrierEngHess(std::vector<Eigen::Vector2f>& x, float y_ground, std::vector<float>& contact_area)
 {
-    sparseMat res;
+    simsparseMat res;
     for(int i = 0; i < x.size(); i++)
     {
         res.loc_i.push_back(0);

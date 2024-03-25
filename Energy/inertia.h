@@ -34,11 +34,11 @@ std::vector<Eigen::Vector2f> inertiaEngGrad(std::vector<Eigen::Vector2f>& x,
     return res;
 }
 
-sparseMat inertiaEngHessian(std::vector<Eigen::Vector2f>& x,
-                            std::vector<Eigen::Vector2f>& x_tilde,
-                            const std::vector<float>& masses)
+simsparseMat inertiaEngHessian(std::vector<Eigen::Vector2f>& x,
+                               std::vector<Eigen::Vector2f>& x_tilde,
+                               const std::vector<float>& masses)
 {
-    sparseMat res;
+    simsparseMat res;
     for(int i = 0; i < masses.size(); i++)
     {
         res.loc_i.push_back(2 * i);

@@ -7,14 +7,14 @@
 #include <vector>
 #include "../eigen-3.4.0/Eigen/Dense"
 
-struct sparseMat
+struct simsparseMat
 {
     std::vector<int> loc_i;
     std::vector<int> loc_j;
     std::vector<float> vals;
 };
 
-Eigen::Matrix4f spdProjection(Eigen::Matrix4f& hess)
+Eigen::Matrix4f mySPDProjection(Eigen::Matrix4f& hess)
 {
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix4f> solver(hess);
     Eigen::Vector4f lam = solver.eigenvalues();
