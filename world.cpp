@@ -61,10 +61,11 @@ void world::physRegistration()
             physics.verts_tilde.emplace_back(0.0f, 0.0f);
             //physics.energyGradient.emplace_back(0.0f);
             //physics.energyGradient.emplace_back(0.0f);
+            physics.mass.emplace_back(40.0f);
         }
     }
     physics.energyGradient = Eigen::VectorXf::Zero(2 * totalNumVerts);
-    physics.searchDir = Eigen::VectorXf ::Zero(2 * totalNumVerts);
+    physics.searchDir = Eigen::VectorXf::Zero(2 * totalNumVerts);
 }
 
 void world::broadcastLocations()

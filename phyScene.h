@@ -12,16 +12,9 @@
 
 
 const float stiffness = 1e5;
-//const float mass = 1.0f;
 const float tolerance = 1e-2;
+const Eigen::Vector2f gravity(0.0f, -0.008f);
 
-
-struct sparseMat
-{
-    std::vector<unsigned int> loc_i;
-    std::vector<unsigned int> loc_j;
-    std::vector<float> vals;
-};
 
 class phyScene
 {
@@ -31,6 +24,7 @@ public:
     std::vector<Eigen::Vector2f> vertices;
     std::vector<std::pair<unsigned int, unsigned int>> edges;
     std::vector<Eigen::Vector2f> velocities;
+    std::vector<float> mass;
 
     // intermediate values
     std::vector<float> squaredRestLengths;
@@ -59,6 +53,10 @@ public:
     float springEnergyVal(float alpha);
     void calcSpringEnergyGradient(float dt);
     void calcSpringEnergyHessian(float dt);
+    // ========================================
+
+    float gravEnergyVal(float alpha);
+    void calcGravEnergyGradient();
 
 };
 

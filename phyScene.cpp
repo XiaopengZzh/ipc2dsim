@@ -46,13 +46,14 @@ void phyScene::calcVertsTilde(float dt)
 
 float phyScene::calcEnergy(float dt, const float alpha)
 {
-    return inertiaEnergyVal(alpha) + dt * dt * springEnergyVal(alpha);
+    return inertiaEnergyVal(alpha) + dt * dt * springEnergyVal(alpha) + gravEnergyVal(alpha);
 }
 
 void phyScene::calcEnergyGradient(float dt)
 {
     calcInertiaEnergyGradient();
     calcSpringEnergyGradient(dt);
+    calcGravEnergyGradient();
 }
 
 void phyScene::calcEnergyHessian(float dt)
@@ -163,9 +164,9 @@ float phyScene::inertiaEnergyVal(const float alpha)
     {
         Eigen::Vector2f offset(searchDir[2 * i], searchDir[2 * i + 1]);
         Eigen::Vector2f diff = vertices[i] - verts_tilde[i] + alpha * offset;
-        sum += 0.5f * diff.dot(diff);
+        sum += 0.5f * diff.dot(diff) * mass[i];
     }
-    return 40.0f * sum;
+    return sum;
 }
 
 void phyScene::calcInertiaEnergyGradient()
@@ -173,8 +174,8 @@ void phyScene::calcInertiaEnergyGradient()
     for(unsigned int i = 0; i < vertices.size(); i++)
     {
         Eigen::Vector2f diff = vertices[i] - verts_tilde[i];
-        energyGradient[2 * i] += diff.x() * 40.0f;
-        energyGradient[2 * i + 1] += diff.y() * 40.0f;
+        energyGradient[2 * i] += diff.x() * mass[i];
+        energyGradient[2 * i + 1] += diff.y() * mass[i];
     }
 }
 
@@ -182,8 +183,8 @@ void phyScene::calcInertiaEnergyHessian()
 {
     for(unsigned int i = 0; i < vertices.size(); i++)
     {
-        energyHessian.emplace_back(2 * i, 2 * i, 40.0f);
-        energyHessian.emplace_back(2 * i + 1, 2 * i + 1, 40.0f);
+        energyHessian.emplace_back(2 * i, 2 * i, mass[i]);
+        energyHessian.emplace_back(2 * i + 1, 2 * i + 1, mass[i]);
     }
 }
 
@@ -246,5 +247,26 @@ void phyScene::calcSpringEnergyHessian(float dt)
                 energyHessian.emplace_back(second * 2 + r, second * 2 + c, H_local(r + 2, c + 2));
             }
         }
+    }
+}
+
+float phyScene::gravEnergyVal(float alpha)
+{
+    float sum = 0.0f;
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        Eigen::Vector2f offset(searchDir[2 * i], searchDir[2 * i + 1]);
+        Eigen::Vector2f x = vertices[i] + alpha * offset;
+        sum += -mass[i] * x.dot(gravity);
+    }
+    return sum;
+}
+
+void phyScene::calcGravEnergyGradient()
+{
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        energyGradient[2 * i] -= mass[i] * gravity[0];
+        energyGradient[2 * i + 1] -= mass[i] * gravity[1];
     }
 }
