@@ -39,6 +39,8 @@ public:
     std::vector<Object> objList;
     phyScene physics;
 
+    Object yBarrier;
+
 private:
     world();
 };

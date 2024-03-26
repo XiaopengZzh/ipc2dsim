@@ -4,6 +4,7 @@
 
 #include "phyScene.h"
 #include "eigen-3.4.0/Eigen/Dense"
+#include <cmath>
 
 Eigen::Matrix4f spdProjection(Eigen::Matrix4f& hess)
 {
@@ -46,20 +47,22 @@ void phyScene::calcVertsTilde(float dt)
 
 float phyScene::calcEnergy(float dt, const float alpha)
 {
-    return inertiaEnergyVal(alpha) + dt * dt * springEnergyVal(alpha) + gravEnergyVal(alpha);
+    return inertiaEnergyVal(alpha) + dt * dt * (springEnergyVal(alpha) + gravEnergyVal(alpha) + barrierEnergyVal(alpha));
 }
 
 void phyScene::calcEnergyGradient(float dt)
 {
     calcInertiaEnergyGradient();
     calcSpringEnergyGradient(dt);
-    calcGravEnergyGradient();
+    calcGravEnergyGradient(dt);
+    calcBarrierEnergyGradient(dt);
 }
 
 void phyScene::calcEnergyHessian(float dt)
 {
     calcInertiaEnergyHessian();
     calcSpringEnergyHessian(dt);
+    calcBarrierEnergyHessian(dt);
 }
 
 void phyScene::calcSearchDir()
@@ -119,6 +122,7 @@ void phyScene::oneTimestepImpl(float dt)
         }
         printf("step size = %f\n", alpha);
 
+        alpha = ccd();
         for(unsigned int i = 0; i < vertices.size(); i++)
         {
             vertices[i] += alpha * Eigen::Vector2f(searchDir[2 * i], searchDir[2 * i + 1]);
@@ -262,11 +266,66 @@ float phyScene::gravEnergyVal(float alpha)
     return sum;
 }
 
-void phyScene::calcGravEnergyGradient()
+void phyScene::calcGravEnergyGradient(float dt)
 {
     for(unsigned int i = 0; i < vertices.size(); i++)
     {
-        energyGradient[2 * i] -= mass[i] * gravity[0];
-        energyGradient[2 * i + 1] -= mass[i] * gravity[1];
+        energyGradient[2 * i] -= mass[i] * gravity[0] * dt * dt;
+        energyGradient[2 * i + 1] -= mass[i] * gravity[1] * dt * dt;
     }
+}
+
+float phyScene::barrierEnergyVal(float alpha)
+{
+    float sum = 0.0f;
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        float d = vertices[i].y() - yground + alpha * searchDir[2 * i + 1];
+        if(d < dhat)
+        {
+            float s = d / dhat;
+            sum += dhat * kappa / 2 * (s - 1) * log(s) * contactArea[i];
+        }
+    }
+    return sum;
+}
+
+void phyScene::calcBarrierEnergyGradient(float dt)
+{
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        float d = vertices[i].y() - yground;
+        if(d < dhat)
+        {
+            float s = d / dhat;
+            energyGradient[2 * i + 1] += dt * dt * contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+        }
+    }
+}
+
+void phyScene::calcBarrierEnergyHessian(float dt)
+{
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        float d = vertices[i].y() - yground;
+        float hess = 0.0f;
+        if(d < dhat)
+        {
+            hess = contactArea[i] * dhat * kappa / (2 * d * d * dhat) * (d + dhat) * dt * dt;
+        }
+        energyHessian.emplace_back(2 * i + 1, 2 * i + 1, hess);
+    }
+}
+
+float phyScene::ccd()
+{
+    float alpha = 1.0f;
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        if(searchDir[2 * i + 1] < 0)
+        {
+            alpha = std::min(alpha, 0.9f * (yground - vertices[i].y()) / searchDir[2 * i + 1]);
+        }
+    }
+    return alpha;
 }

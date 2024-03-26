@@ -13,8 +13,10 @@
 
 const float stiffness = 1e5;
 const float tolerance = 1e-2;
-const Eigen::Vector2f gravity(0.0f, -0.008f);
-
+const Eigen::Vector2f gravity(0.0f, -0.8f);
+const float yground = -3.0f;
+const float dhat = 0.1f;
+const float kappa = 1e5;
 
 class phyScene
 {
@@ -25,6 +27,7 @@ public:
     std::vector<std::pair<unsigned int, unsigned int>> edges;
     std::vector<Eigen::Vector2f> velocities;
     std::vector<float> mass;
+    std::vector<float> contactArea;
 
     // intermediate values
     std::vector<float> squaredRestLengths;
@@ -56,7 +59,15 @@ public:
     // ========================================
 
     float gravEnergyVal(float alpha);
-    void calcGravEnergyGradient();
+    void calcGravEnergyGradient(float dt);
+
+    // ========================================
+
+    float barrierEnergyVal(float alpha);
+    void calcBarrierEnergyGradient(float dt);
+    void calcBarrierEnergyHessian(float dt);
+
+    float ccd();
 
 };
 

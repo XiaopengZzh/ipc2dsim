@@ -44,14 +44,15 @@ public:
     std::vector<Eigen::Vector2f> vertices;
     std::vector<elementIndex> elementIndices;
     std::vector<std::pair<unsigned int, unsigned int>> edges;
-    unsigned int VAO;
-    unsigned int VBO;
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
 
     shader shaderInst;
 
     // object type
-    EObjectType objectType;
+    EObjectType objectType = EObjectType::STATIC;
 
+    Object() = default;
     Object(const std::string &filename, EObjectType type, shader shaderInstance);
 
     void Draw(Camera& cam);

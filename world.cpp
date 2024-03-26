@@ -18,6 +18,8 @@ void append(std::vector<std::pair<unsigned int, unsigned int>>& edges,
 world::world()
 {
     std::cout << "World is created." << std::endl;
+    shader barrierShader("../shaders/vertex.vs", "../shaders/barrier.fs");
+    yBarrier = Object("../model/yBarrier.xyz", EObjectType::STATIC, barrierShader);
 }
 
 void world::CreateObject(const std::string &filename, EObjectType type, shader shaderInstance)
@@ -62,6 +64,7 @@ void world::physRegistration()
             //physics.energyGradient.emplace_back(0.0f);
             //physics.energyGradient.emplace_back(0.0f);
             physics.mass.emplace_back(40.0f);
+            physics.contactArea.emplace_back(0.25f);
         }
     }
     physics.energyGradient = Eigen::VectorXf::Zero(2 * totalNumVerts);
@@ -89,6 +92,7 @@ void world::Draw(Camera &cam)
     {
         obj.Draw(cam);
     }
+    yBarrier.Draw(cam);
 }
 
 void world::simulate(float dt)
