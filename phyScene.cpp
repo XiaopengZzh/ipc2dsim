@@ -3,7 +3,7 @@
 //
 
 #include "phyScene.h"
-#include "../eigen-3.4.0/Eigen/Dense"
+#include "eigen-3.4.0/Eigen/Dense"
 
 Eigen::Matrix4f spdProjection(Eigen::Matrix4f& hess)
 {
@@ -21,21 +21,31 @@ Eigen::Matrix4f spdProjection(Eigen::Matrix4f& hess)
     return spd;
 }
 
+float infnorm(const Eigen::VectorXf& vec)
+{
+    unsigned int sz = vec.size();
+    float res = vec[0];
+    for(unsigned int i = 0; i < sz; i = i + 2)
+    {
+        if(res < abs(vec[i]) + abs(vec[i + 1]) )
+        {
+            res = abs(vec[i]) + abs(vec[i + 1]);
+        }
+    }
+    return res;
+}
 
 
 void phyScene::calcVertsTilde(float dt)
 {
     for(unsigned int i = 0; i < vertices.size(); i++)
     {
-        verts_tilde[i] = vertices[i] - dt * velocities[i];
+        verts_tilde[i] = vertices[i] + dt * velocities[i];
     }
 }
 
 float phyScene::calcEnergy(float dt, const float alpha)
 {
-    //float a = inertiaEnergyVal(alpha);
-    //float b = springEnergyVal(alpha);
-    float temp = inertiaEnergyVal(alpha) + dt * dt * springEnergyVal(alpha);
     return inertiaEnergyVal(alpha) + dt * dt * springEnergyVal(alpha);
 }
 
@@ -79,19 +89,28 @@ void phyScene::oneTimestepImpl(float dt)
     calcEnergyHessian(dt);
     calcSearchDir();
 
-    std::vector<float> tem;
-    for(auto num : energyGradient)
+    // debug
+    /*
+    std::vector<float> temp1;
+    for(float i : energyGradient)
     {
-        tem.push_back(num);
+        temp1.push_back(i);
     }
+    std::vector<float> temp2;
+    for(float i : searchDir)
+    {
+        temp2.push_back(i);
+    }
+    */
 
-
-    while(searchDir.lpNorm<Eigen::Infinity>() > tolerance * dt)
+    while(infnorm(searchDir) > tolerance * dt)
     {
         printf("   Iteration %d : ", iter);
-        printf("residual = %f, ", searchDir.lpNorm<Eigen::Infinity>() / dt);
+        printf("residual = %f, ", infnorm(searchDir) / dt);
 
         float alpha = 1.0f;
+
+        float a = calcEnergy(dt, alpha);
 
         while(calcEnergy(dt, alpha) > E_last)
         {
@@ -105,9 +124,26 @@ void phyScene::oneTimestepImpl(float dt)
         }
 
         E_last = calcEnergy(dt);
+        energyGradient.setZero();
+        energyHessian.clear();
         calcEnergyGradient(dt);
         calcEnergyHessian(dt);
         calcSearchDir();
+
+        //debug
+        /*
+        std::vector<float> temp3;
+        for(float i : energyGradient)
+        {
+            temp3.push_back(i);
+        }
+        std::vector<float> temp4;
+        for(float i : searchDir)
+        {
+            temp4.push_back(i);
+        }
+        */
+
         iter++;
     }
 
@@ -199,7 +235,6 @@ void phyScene::calcSpringEnergyHessian(float dt)
         integration.bottomLeftCorner(2, 2) = - H_diff;
         integration.bottomRightCorner(2, 2) = H_diff;
         Eigen::Matrix4f H_local = dt * dt * spdProjection(integration);
-        //Eigen::Matrix4f H_local = spdProjection(integration);
 
         for(unsigned int r = 0; r < 2; r++)
         {
