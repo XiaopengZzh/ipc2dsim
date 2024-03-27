@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
         printf("### timestep : %d\n", totalFrameCount);
         //world->simulate(dt);
-        world->simulate(0.004f);
+        world->simulate(0.01f);
 
         world->Draw(camera);
 

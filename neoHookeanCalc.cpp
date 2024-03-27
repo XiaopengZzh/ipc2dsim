@@ -158,7 +158,7 @@ std::tuple<Eigen::Vector2f, Eigen::Vector2f, Eigen::Vector2f> dPsi_dx(const Eige
     float d2 = P(0, 0) * IB(0, 0) + P(0, 1) * IB(0, 1);
     float d3 = P(1, 0) * IB(0, 0) + P(1, 1) * IB(0, 1);
     float d4 = P(0, 0) * IB(1, 0) + P(0, 1) * IB(1, 1);
-    float d5 = P(1, 0) + IB(1, 0) + P(1, 1) * IB(1, 1);
+    float d5 = P(1, 0) * IB(1, 0) + P(1, 1) * IB(1, 1);
     Eigen::Vector2f res0, res1, res2;
     res0(0) = -d2 - d4;
     res0(1) = -d3 - d5;

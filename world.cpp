@@ -66,7 +66,7 @@ void world::physRegistration()
         }
 
         //initialStretch(1.4f);
-        obj.stretch(1.4f);
+        //obj.stretch(1.4f);
 
         appendEBO(physics.eidx, obj.elementIndices, physics.vertices.size());
 
@@ -79,7 +79,9 @@ void world::physRegistration()
             unsigned int e1 = obj.elementIndices[i].indices[1];
             unsigned int e2 = obj.elementIndices[i].indices[2];
             Eigen::Matrix2f TB;
-            TB << obj.vertices[e1].x() - obj.vertices[e0].x(), obj.vertices[e2].x() - obj.vertices[e0].x(), obj.vertices[e1].y() - obj.vertices[e0].y(), obj.vertices[e2].y() - obj.vertices[e0].y();
+            //TB << obj.vertices[e1].x() - obj.vertices[e0].x(), obj.vertices[e2].x() - obj.vertices[e0].x(), obj.vertices[e1].y() - obj.vertices[e0].y(), obj.vertices[e2].y() - obj.vertices[e0].y();
+            TB.col(0) = obj.vertices[e1] - obj.vertices[e0];
+            TB.col(1) = obj.vertices[e2] - obj.vertices[e0];
             physics.vol.emplace_back(TB.determinant() / 2.0f);
             physics.IB.emplace_back(TB.inverse());
             physics.lams.emplace_back(temp_lam);

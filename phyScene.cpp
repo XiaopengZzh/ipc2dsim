@@ -31,14 +31,14 @@ void phyScene::calcVertsTilde(float dt)
 
 float phyScene::calcEnergy(float dt, const float alpha)
 {
-    return inertiaEnergyVal(alpha) + dt * dt * (springEnergyVal(alpha) + gravEnergyVal(alpha) + barrierEnergyVal(alpha) +
+    return inertiaEnergyVal(alpha) + dt * dt * (gravEnergyVal(alpha) + barrierEnergyVal(alpha) +
             neoHookeanEnergyVal(alpha));
 }
 
 void phyScene::calcEnergyGradient(float dt)
 {
     calcInertiaEnergyGradient();
-    calcSpringEnergyGradient(dt);
+    //calcSpringEnergyGradient(dt);
     calcGravEnergyGradient(dt);
     calcBarrierEnergyGradient(dt);
     calcNeoHookeanEnergyGradient(dt);
@@ -47,9 +47,9 @@ void phyScene::calcEnergyGradient(float dt)
 void phyScene::calcEnergyHessian(float dt)
 {
     calcInertiaEnergyHessian();
-    calcSpringEnergyHessian(dt);
-    calcBarrierEnergyHessian(dt);
+    //calcSpringEnergyHessian(dt);
     calcNeoHookeanEnergyHessian(dt);
+    calcBarrierEnergyHessian(dt);
 }
 
 void phyScene::calcSearchDir()
@@ -299,8 +299,8 @@ void phyScene::calcBarrierEnergyHessian(float dt)
         if(d < dhat)
         {
             hess = contactArea[i] * dhat * kappa / (2 * d * d * dhat) * (d + dhat) * dt * dt;
+            energyHessian.emplace_back(2 * i + 1, 2 * i + 1, hess);
         }
-        energyHessian.emplace_back(2 * i + 1, 2 * i + 1, hess);
     }
 }
 
@@ -423,8 +423,8 @@ void phyScene::calcNeoHookeanEnergyHessian(float dt)
                 {
                     for(unsigned int dJ = 0; dJ < 2; dJ++)
                     {
-                        unsigned int idxi = eidx[i](xI) + dI;
-                        unsigned int idxj = eidx[i](xJ) + dJ;
+                        unsigned int idxi = eidx[i](xI) * 2 + dI;
+                        unsigned int idxj = eidx[i](xJ) * 2 + dJ;
                         float val = local_hess(xI * 2 + dI, xJ * 2 + dJ) * dt * dt;
                         energyHessian.emplace_back(idxi, idxj, val);
                     }

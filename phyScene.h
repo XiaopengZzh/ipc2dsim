@@ -14,9 +14,9 @@
 
 const float stiffness = 1e5;
 const float tolerance = 1e-2;
-const Eigen::Vector2f gravity(0.0f, -0.8f);
+const Eigen::Vector2f gravity(0.0f, -9.81f);
 const float yground = -3.0f;
-const float dhat = 0.1f;
+const float dhat = 0.01f;
 const float kappa = 1e5;
 const float E = 1e5f; // Young's module
 const float nu = 0.4f; // Poisson ratio
