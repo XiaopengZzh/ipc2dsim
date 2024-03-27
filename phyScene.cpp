@@ -5,6 +5,8 @@
 #include "phyScene.h"
 #include "eigen-3.4.0/Eigen/Dense"
 #include <cmath>
+#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
+//#include "eigen-3.4.0/Eigen/src/OrderingMethods/Ordering.h"
 
 float infnorm(const Eigen::VectorXf& vec)
 {
@@ -55,13 +57,45 @@ void phyScene::calcEnergyHessian(float dt)
 void phyScene::calcSearchDir()
 {
     unsigned int dim = 2 * vertices.size();
-    Eigen::SparseMatrix<float> hessian(dim, dim);
-    hessian.setFromTriplets(energyHessian.begin(), energyHessian.end());
-    Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
+
+    //==========
+    Eigen::VectorXd minusd_grad(energyGradient.size());
+
+    for(unsigned int i = 0; i < energyGradient.size(); i++)
+    {
+        minusd_grad(i) = static_cast<double>(-energyGradient(i));
+    }
+    //======
+    std::vector<Eigen::Triplet<double>> db_hess;
+    db_hess.reserve(energyHessian.size());
+    for(auto i : energyHessian)
+    {
+        db_hess.emplace_back(i.row(), i.col(), static_cast<double>(i.value()));
+    }
+    // ========
+
+    Eigen::SparseMatrix<double> hessian(dim, dim);
+    hessian.setFromTriplets(db_hess.begin(), db_hess.end());
+
+    Eigen::IterScaling<Eigen::SparseMatrix<double>> scal;
+    scal.computeRef(hessian);
+    //Eigen::VectorXd b = minusd_grad;
+    minusd_grad = scal.LeftScaling().cwiseProduct(minusd_grad);
+
+    Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> solver;
     //solver
     solver.analyzePattern(hessian);
     solver.factorize(hessian);
-    searchDir = solver.solve(-energyGradient);
+
+    Eigen::VectorXd direction = solver.solve(minusd_grad);
+    direction = scal.RightScaling().cwiseProduct(direction);
+
+    for(unsigned int i = 0; i < direction.size(); i++)
+    {
+        searchDir(i) = static_cast<float>(direction(i));
+    }
+
+    //searchDir = solver.solve(-energyGradient);
 }
 
 void phyScene::oneTimestepImpl(float dt)
