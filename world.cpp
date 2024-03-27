@@ -3,6 +3,8 @@
 //
 
 #include "world.h"
+#include "eigen-3.4.0/Eigen/Core"
+
 
 void append(std::vector<std::pair<unsigned int, unsigned int>>& edges,
             const std::vector<std::pair<unsigned int, unsigned int>>& edgesToAdd)
@@ -13,6 +15,15 @@ void append(std::vector<std::pair<unsigned int, unsigned int>>& edges,
         edges.emplace_back(edge.first + baseNum, edge.second + baseNum);
     }
 }
+
+void appendEBO(std::vector<Eigen::Vector3i>& eidx, const std::vector<elementIndex>& eidxToAdd, unsigned int baseNum)
+{
+    for(auto e : eidxToAdd)
+    {
+        eidx.emplace_back(e.indices[0] + baseNum, e.indices[1] + baseNum, e.indices[2] + baseNum);
+    }
+}
+
 
 
 world::world()
@@ -53,8 +64,21 @@ void world::physRegistration()
         //initialStretch(1.4f);
         obj.stretch(1.4f);
 
+        appendEBO(physics.eidx, obj.elementIndices, physics.vertices.size());
+
         physics.vertices.insert(physics.vertices.end(), obj.vertices.begin(), obj.vertices.end());
         append(physics.edges, obj.edges);
+
+        for(unsigned int i = 0; i < obj.elementIndices.size(); i++)
+        {
+            unsigned int e0 = obj.elementIndices[i].indices[0];
+            unsigned int e1 = obj.elementIndices[i].indices[1];
+            unsigned int e2 = obj.elementIndices[i].indices[2];
+            Eigen::Matrix2f TB;
+            TB << obj.vertices[e1].x() - obj.vertices[e0].x(), obj.vertices[e2].x() - obj.vertices[e0].x(), obj.vertices[e1].y() - obj.vertices[e0].y(), obj.vertices[e2].y() - obj.vertices[e0].y();
+            physics.vol.emplace_back(TB.determinant() / 2.0f);
+            physics.IB.emplace_back(TB.inverse());
+        }
 
         totalNumVerts += obj.vertices.size();
         for(unsigned int i = 0; i < obj.vertices.size(); i++)

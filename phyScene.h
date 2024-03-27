@@ -9,6 +9,7 @@
 #include "eigen-3.4.0/Eigen/Sparse"
 #include "eigen-3.4.0/Eigen/SparseLU"
 #include <iostream>
+#include "neoHookeanCalc.h"
 
 
 const float stiffness = 1e5;
@@ -28,6 +29,9 @@ public:
     std::vector<Eigen::Vector2f> velocities;
     std::vector<float> mass;
     std::vector<float> contactArea;
+    std::vector<float> vol;
+    std::vector<Eigen::Matrix2f> IB;
+    std::vector<Eigen::Vector3i> eidx;
 
     // intermediate values
     std::vector<float> squaredRestLengths;
@@ -68,6 +72,10 @@ public:
     void calcBarrierEnergyHessian(float dt);
 
     float ccd();
+
+    // ========================================
+
+    Eigen::Matrix2f deformation_grad(unsigned int idx);
 
 };
 

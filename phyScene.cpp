@@ -6,22 +6,6 @@
 #include "eigen-3.4.0/Eigen/Dense"
 #include <cmath>
 
-Eigen::Matrix4f spdProjection(Eigen::Matrix4f& hess)
-{
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix4f> solver(hess);
-    Eigen::Vector4f lam = solver.eigenvalues();
-    Eigen::Matrix4f V = solver.eigenvectors();
-
-    for(int i = 0; i < lam.size(); i++)
-    {
-        lam(i) = std::max(0.0f, lam(i));
-    }
-
-    Eigen::Matrix4f diagLam = lam.asDiagonal();
-    Eigen::Matrix4f spd = V * diagLam * V.transpose();
-    return spd;
-}
-
 float infnorm(const Eigen::VectorXf& vec)
 {
     unsigned int sz = vec.size();
@@ -329,3 +313,15 @@ float phyScene::ccd()
     }
     return alpha;
 }
+
+Eigen::Matrix2f phyScene::deformation_grad(unsigned int idx)
+{
+    Eigen::Matrix2f F;
+    unsigned int e0, e1, e2;
+    e0 = eidx[idx](0);
+    e1 = eidx[idx](1);
+    e2 = eidx[idx](2);
+    F << vertices[e1].x() - vertices[e0].x(), vertices[e2].x() - vertices[e0].x(), vertices[e1].y() - vertices[e0].y(), vertices[e2].y() - vertices[e0].y();
+    return F * IB[idx];
+}
+
