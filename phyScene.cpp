@@ -57,44 +57,15 @@ void phyScene::calcEnergyHessian(float dt)
 void phyScene::calcSearchDir()
 {
     unsigned int dim = 2 * vertices.size();
-
-    //==========
-    Eigen::VectorXd minusd_grad(energyGradient.size());
-
-    for(unsigned int i = 0; i < energyGradient.size(); i++)
-    {
-        minusd_grad(i) = static_cast<double>(-energyGradient(i));
-    }
-    //======
-    std::vector<Eigen::Triplet<double>> db_hess;
-    db_hess.reserve(energyHessian.size());
-    for(auto i : energyHessian)
-    {
-        db_hess.emplace_back(i.row(), i.col(), static_cast<double>(i.value()));
-    }
-    // ========
-
-    Eigen::SparseMatrix<double> hessian(dim, dim);
-    hessian.setFromTriplets(db_hess.begin(), db_hess.end());
-
-    Eigen::IterScaling<Eigen::SparseMatrix<double>> scal;
-    scal.computeRef(hessian);
-    //Eigen::VectorXd b = minusd_grad;
-    minusd_grad = scal.LeftScaling().cwiseProduct(minusd_grad);
-
-    Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> solver;
+    Eigen::SparseMatrix<float> hessian(dim, dim);
+    hessian.setFromTriplets(energyHessian.begin(), energyHessian.end());
+    Eigen::ConjugateGradient<Eigen::SparseMatrix<float>, Eigen::Lower | Eigen::Upper> cg;
+    cg.compute(hessian);
+    searchDir = cg.solve(-energyGradient);
+    //Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
     //solver
-    solver.analyzePattern(hessian);
-    solver.factorize(hessian);
-
-    Eigen::VectorXd direction = solver.solve(minusd_grad);
-    direction = scal.RightScaling().cwiseProduct(direction);
-
-    for(unsigned int i = 0; i < direction.size(); i++)
-    {
-        searchDir(i) = static_cast<float>(direction(i));
-    }
-
+    //solver.analyzePattern(hessian);
+    //solver.factorize(hessian);
     //searchDir = solver.solve(-energyGradient);
 }
 
