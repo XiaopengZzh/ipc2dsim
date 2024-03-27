@@ -18,6 +18,8 @@ const Eigen::Vector2f gravity(0.0f, -0.8f);
 const float yground = -3.0f;
 const float dhat = 0.1f;
 const float kappa = 1e5;
+const float E = 1e5f; // Young's module
+const float nu = 0.4f; // Poisson ratio
 
 class phyScene
 {
@@ -32,6 +34,8 @@ public:
     std::vector<float> vol;
     std::vector<Eigen::Matrix2f> IB;
     std::vector<Eigen::Vector3i> eidx;
+    std::vector<float> lams;
+    std::vector<float> mus;
 
     // intermediate values
     std::vector<float> squaredRestLengths;
@@ -75,7 +79,13 @@ public:
 
     // ========================================
 
-    Eigen::Matrix2f deformation_grad(unsigned int idx);
+    Eigen::Matrix2f deformation_grad(unsigned int idx, float alpha = 0.0f);
+
+    float lineSearchFilter();
+
+    float neoHookeanEnergyVal(float alpha);
+    void calcNeoHookeanEnergyGradient(float dt);
+    void calcNeoHookeanEnergyHessian(float dt);
 
 };
 

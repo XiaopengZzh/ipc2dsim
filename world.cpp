@@ -53,6 +53,10 @@ void world::initialStretch(float factor)
 void world::physRegistration()
 {
     unsigned int totalNumVerts = 0;
+
+    float temp_mu = 0.5f * E / (1 + nu);
+    float temp_lam = E * nu / ((1 + nu) * (1 - 2 * nu));
+
     for(auto& obj : objList)
     {
         for(auto edge : obj.edges)
@@ -78,6 +82,8 @@ void world::physRegistration()
             TB << obj.vertices[e1].x() - obj.vertices[e0].x(), obj.vertices[e2].x() - obj.vertices[e0].x(), obj.vertices[e1].y() - obj.vertices[e0].y(), obj.vertices[e2].y() - obj.vertices[e0].y();
             physics.vol.emplace_back(TB.determinant() / 2.0f);
             physics.IB.emplace_back(TB.inverse());
+            physics.lams.emplace_back(temp_lam);
+            physics.mus.emplace_back(temp_mu);
         }
 
         totalNumVerts += obj.vertices.size();

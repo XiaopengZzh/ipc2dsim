@@ -37,7 +37,14 @@ Eigen::Matrix2f spdProjection2d(const Eigen::Matrix2f& F)
     return spd;
 }
 
-
+float Psi(const Eigen::Matrix2f& F, float mu, float lam)
+{
+    float J = F.determinant();
+    float lnJ = log(J);
+    Eigen::Matrix2f temp = F.transpose() * F;
+    float trace = temp.trace();
+    return mu / 2 * (trace - 2) - mu * lnJ + lam / 2 * lnJ * lnJ;
+}
 
 std::tuple<Eigen::Matrix2f, Eigen::Vector2f, Eigen::Matrix2f> polarSVD(const Eigen::Matrix2f& F)
 {
@@ -86,6 +93,14 @@ float B_left_coef(const Eigen::Vector2f& s, float mu, float lam)
     float prod = s(0) * s(1);
     return (mu + (mu - lam * log(prod)) / prod) / 2;
 }
+
+Eigen::Matrix2f dPsi_dF(const Eigen::Matrix2f& F, float mu, float lam)
+{
+    Eigen::Matrix2f FinvT = F.transpose().inverse();
+    return mu * (F - FinvT) + lam * log(F.determinant()) * FinvT;
+}
+
+
 
 Eigen::Matrix4f d2Psi_dF2(const Eigen::Matrix2f& F, float mu, float lam)
 {
@@ -195,4 +210,35 @@ Eigen::MatrixXf d2Psi_dx2(const Eigen::Matrix4f& dPdF, const Eigen::Matrix2f& IB
     return res;
 }
 
-
+float sprRoot(float a, float b, float c, float tol)
+{
+    float t = 0.0f;
+    if(abs(a) <= tol)
+    {
+        if(abs(b) <= tol)
+        {
+            t = -1.0f;
+        }
+        else
+        {
+            t = -c / b;
+        }
+    }
+    else
+    {
+        float desc = b * b - 4.0f * a * c;
+        if(desc > 0)
+        {
+            t = (-b - sqrt(desc)) / (2.0f * a);
+            if(t < 0)
+            {
+                t = (-b + sqrt(desc)) / (2.0f * a);
+            }
+        }
+        else
+        {
+            t = -1.0f;
+        }
+    }
+    return t;
+}
