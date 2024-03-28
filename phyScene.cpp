@@ -5,7 +5,7 @@
 #include "phyScene.h"
 #include "eigen-3.4.0/Eigen/Dense"
 #include <cmath>
-#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
+//#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
 //#include "eigen-3.4.0/Eigen/src/OrderingMethods/Ordering.h"
 
 float infnorm(const Eigen::VectorXf& vec)
@@ -34,7 +34,7 @@ void phyScene::calcVertsTilde(float dt)
 float phyScene::calcEnergy(float dt, const float alpha)
 {
     return inertiaEnergyVal(alpha) + dt * dt * (gravEnergyVal(alpha) + barrierEnergyVal(alpha) +
-            neoHookeanEnergyVal(alpha));
+            neoHookeanEnergyVal(alpha) + repulsiveEnergyVal(alpha));
 }
 
 void phyScene::calcEnergyGradient(float dt)
@@ -44,6 +44,7 @@ void phyScene::calcEnergyGradient(float dt)
     calcGravEnergyGradient(dt);
     calcBarrierEnergyGradient(dt);
     calcNeoHookeanEnergyGradient(dt);
+    calcRepulsiveEnergyGradient(dt);
 }
 
 void phyScene::calcEnergyHessian(float dt)
@@ -52,6 +53,7 @@ void phyScene::calcEnergyHessian(float dt)
     //calcSpringEnergyHessian(dt);
     calcNeoHookeanEnergyHessian(dt);
     calcBarrierEnergyHessian(dt);
+    calcRepulsiveEnergyHessian(dt);
 }
 
 void phyScene::calcSearchDir()
@@ -86,7 +88,7 @@ void phyScene::oneTimestepImpl(float dt)
     calcSearchDir();
 
     // debug
-    /*
+
     std::vector<float> temp1;
     for(float i : energyGradient)
     {
@@ -97,7 +99,7 @@ void phyScene::oneTimestepImpl(float dt)
     {
         temp2.push_back(i);
     }
-    */
+
 
     while(infnorm(searchDir) > tolerance * dt)
     {
@@ -319,6 +321,23 @@ float phyScene::ccd()
             alpha = std::min(alpha, 0.9f * (yground - vertices[i].y()) / searchDir[2 * i + 1]);
         }
     }
+
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        for(auto edge : edges)
+        {
+            if(edge.first == i || edge.second == i)
+            {
+                continue;
+            }
+            Eigen::Vector2f dir;
+            dir(0) = searchDir(2 * i);
+            dir(1) = searchDir(2 * i + 1);
+            float t = minAlphaToPassThru(vertices[i], dir, vertices[edge.first], vertices[edge.second]);
+            alpha = std::min(t, alpha);
+        }
+    }
+
     return alpha;
 }
 
@@ -435,6 +454,228 @@ void phyScene::calcNeoHookeanEnergyHessian(float dt)
                     }
                 }
             }
+        }
+    }
+}
+
+float phyScene::repulsiveEnergyVal(float alpha)
+{
+    repPairlst.clear();
+    float sum = 0.0f;
+    for(unsigned int i = 0; i < vertices.size(); i++)
+    {
+        for(unsigned int j = 0; j < edges.size(); j ++)
+        {
+            if(i == edges[j].first || i == edges[j].second)
+            {
+                continue;
+            }
+            unsigned int idx0 = edges[j].first;
+            unsigned int idx1 = edges[j].second;
+            Eigen::Vector2f p = vertices[i];
+            p(0) += alpha * searchDir(2 * i);
+            p(1) += alpha * searchDir(2 * i + 1);
+            Eigen::Vector2f e0 = vertices[idx0];
+            e0(0) += alpha * searchDir(2 * idx0);
+            e0(1) += alpha * searchDir(2 * idx0 + 1);
+            Eigen::Vector2f e1 = vertices[idx1];
+            e1(0) += alpha * searchDir(2 * idx1);
+            e1(1) += alpha * searchDir(2 * idx1 + 1);
+            EPointEdgeDistanceType petype = point_edge_dist_type(p, e0, e1);
+            if(petype == EPointEdgeDistanceType::P_E)
+            {
+                float length = (e0 - e1).norm();
+                Eigen::Vector2f e0p = e0 - p;
+                Eigen::Vector2f e1p = e1 - p;
+                float d = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x()) / length;
+                if(d < dhat)
+                {
+                    float s = d / dhat;
+                    sum += contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+                    repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E);
+                }
+            }
+            else if(petype == EPointEdgeDistanceType::P_E0)
+            {
+                float d = (p - e0).norm();
+                if(d < dhat)
+                {
+                    float s = d / dhat;
+                    sum += contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+                    repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E0);
+                }
+            }
+            else if(petype == EPointEdgeDistanceType::P_E1)
+            {
+                float d = (p - e1).norm();
+                if(d < dhat)
+                {
+                    float s = d / dhat;
+                    sum += contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+                    repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E1);
+                }
+            }
+            else
+            {
+                printf("EPointEdgeDistanceType doesn't exist!\n");
+            }
+        }
+    }
+    return sum;
+}
+
+void phyScene::calcRepulsiveEnergyGradient(float dt)
+{
+    for(auto repPair : repPairlst)
+    {
+        if(repPair.PE_type == EPointEdgeDistanceType::P_E)
+        {
+            float grad[6];
+            unsigned int idx0 = edges[repPair.edge_idx].first;
+            unsigned int idx1 = edges[repPair.edge_idx].second;
+            float a = vertices[repPair.pt_idx](0);
+            float b = vertices[repPair.pt_idx](1);
+            float c = vertices[idx0](0);
+            float d = vertices[idx0](1);
+            float e = vertices[idx1](0);
+            float f = vertices[idx1](1);
+            point_line_distance_gradient_2D(a,b,c,d,e,f,grad);
+            energyGradient(2 * repPair.pt_idx) += dt * dt * grad[0];
+            energyGradient(2 * repPair.pt_idx + 1) += dt * dt * grad[1];
+            energyGradient(2 * idx0) += dt * dt * grad[2];
+            energyGradient(2 * idx0 + 1) += dt * dt * grad[3];
+            energyGradient(2 * idx1) += dt * dt * grad[4];
+            energyGradient(2 * idx1 + 1) += dt * dt * grad[5];
+        }
+        else if(repPair.PE_type == EPointEdgeDistanceType::P_E0)
+        {
+            unsigned int idx = repPair.pt_idx;
+            unsigned int idx0 = edges[repPair.edge_idx].first;
+            Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx0]);
+            energyGradient(2 * idx) += dt * dt * grad[0];
+            energyGradient(2 * idx + 1) += dt * dt * grad[1];
+            energyGradient(2 * idx0) += dt * dt * grad[2];
+            energyGradient(2 * idx0 + 1) += dt * dt * grad[3];
+        }
+        else if(repPair.PE_type == EPointEdgeDistanceType::P_E1)
+        {
+            unsigned int idx = repPair.pt_idx;
+            unsigned int idx1 = edges[repPair.edge_idx].second;
+            Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx1]);
+            energyGradient(2 * idx) += dt * dt * grad[0];
+            energyGradient(2 * idx + 1) += dt * dt * grad[1];
+            energyGradient(2 * idx1) += dt * dt * grad[2];
+            energyGradient(2 * idx1 + 1) += dt * dt * grad[3];
+        }
+        else
+        {
+            printf("EPointEdgeDistanceType doesn't exist!\n");
+        }
+    }
+}
+
+void phyScene::calcRepulsiveEnergyHessian(float dt)
+{
+    for(auto repPair : repPairlst)
+    {
+        if(repPair.PE_type == EPointEdgeDistanceType::P_E)
+        {
+            float hess[36];
+            unsigned int idx = repPair.pt_idx;
+            unsigned int idx0 = edges[repPair.edge_idx].first;
+            unsigned int idx1 = edges[repPair.edge_idx].second;
+            float a = vertices[idx](0);
+            float b = vertices[idx](1);
+            float c = vertices[idx0](0);
+            float d = vertices[idx0](1);
+            float e = vertices[idx1](0);
+            float f = vertices[idx1](1);
+            point_line_distance_hessian_2D(a,b,c,d,e,f,hess);
+            energyHessian.emplace_back(2 * idx, 2 * idx, hess[0]);
+            energyHessian.emplace_back(2 * idx, 2 * idx + 1, hess[1]);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx, hess[6]);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, hess[7]);
+
+            energyHessian.emplace_back(2 * idx0, 2 * idx0, hess[14]);
+            energyHessian.emplace_back(2 * idx0, 2 * idx0 + 1, hess[15]);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0, hess[20]);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0 + 1, hess[21]);
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    energyHessian.emplace_back(2 * idx + i, 2 * idx + j, hess[i * 6 + j] * dt * dt);
+                }
+            }
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    energyHessian.emplace_back(2 * idx0 + i, 2 * idx0 + j, hess[14 + i * 6 + j] * dt * dt);
+                }
+            }
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    energyHessian.emplace_back(2 * idx1 + i, 2 * idx1 + j, hess[28 + i * 6 + j] * dt * dt);
+                }
+            }
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    energyHessian.emplace_back(2 * idx + i, 2 * idx0 + j, hess[2 + i * 6 + j] * dt * dt);
+                    energyHessian.emplace_back(2 * idx0 + j, 2 * idx + i, hess[2 + i * 6 + j] * dt * dt);
+                }
+            }
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    energyHessian.emplace_back(2 * idx + i, 2 * idx1 + j, hess[4 + i * 6 + j] * dt * dt);
+                    energyHessian.emplace_back(2 * idx1 + j, 2 * idx + i, hess[4 + i * 6 + j] * dt * dt);
+                }
+            }
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    energyHessian.emplace_back(2 * idx0 + i, 2 * idx1 + j, hess[16 + i * 6 + j] * dt * dt);
+                    energyHessian.emplace_back(2 * idx1 + j, 2 * idx0 + i, hess[16 + i * 6 + j] * dt * dt);
+                }
+            }
+        }
+        else if(repPair.PE_type == EPointEdgeDistanceType::P_E0)
+        {
+            unsigned int idx = repPair.pt_idx;
+            unsigned int idx0 = edges[repPair.edge_idx].first;
+
+            energyHessian.emplace_back(2 * idx, 2 * idx, 2 * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, 2 * dt * dt);
+            energyHessian.emplace_back(2 * idx0, 2 * idx0, 2 * dt * dt);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0 + 1, 2 * dt * dt);
+
+            energyHessian.emplace_back(2 * idx, 2 * idx0, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx0 + 1, -2 * dt * dt);
+
+            energyHessian.emplace_back(2 * idx0, 2 * idx, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx + 1, -2 * dt * dt);
+
+        }
+        else if(repPair.PE_type == EPointEdgeDistanceType::P_E1)
+        {
+            unsigned int idx = repPair.pt_idx;
+            unsigned int idx1 = edges[repPair.edge_idx].second;
+
+            energyHessian.emplace_back(2 * idx, 2 * idx, 2 * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, 2 * dt * dt);
+            energyHessian.emplace_back(2 * idx1, 2 * idx1, 2 * dt * dt);
+            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx1 + 1, 2 * dt * dt);
+
+            energyHessian.emplace_back(2 * idx, 2 * idx1, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx1 + 1, -2 * dt * dt);
+
+            energyHessian.emplace_back(2 * idx1, 2 * idx, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx + 1, -2 * dt * dt);
+        }
+        else
+        {
+            printf("EPointEdgeDistanceType doesn't exist!\n");
         }
     }
 }

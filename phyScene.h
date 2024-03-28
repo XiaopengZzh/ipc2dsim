@@ -10,6 +10,7 @@
 #include "eigen-3.4.0/Eigen/SparseLU"
 #include <iostream>
 #include "neoHookeanCalc.h"
+#include "repulsionCalc.h"
 
 
 const float stiffness = 1e5;
@@ -43,6 +44,7 @@ public:
     Eigen::VectorXf energyGradient;
     std::vector<Eigen::Triplet<float>> energyHessian;
     Eigen::VectorXf searchDir;
+    std::vector<repulsivePair> repPairlst;
 
     void calcVertsTilde(float dt);
 
@@ -86,6 +88,12 @@ public:
     float neoHookeanEnergyVal(float alpha);
     void calcNeoHookeanEnergyGradient(float dt);
     void calcNeoHookeanEnergyHessian(float dt);
+
+    // =====================================
+
+    float repulsiveEnergyVal(float alpha);
+    void calcRepulsiveEnergyGradient(float dt);
+    void calcRepulsiveEnergyHessian(float dt);
 
 };
 

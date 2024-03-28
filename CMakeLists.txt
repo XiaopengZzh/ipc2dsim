@@ -22,6 +22,7 @@ target_sources(${PROJECT_NAME}
 		Energy/barrier.h
 		phyScene.h
 		neoHookeanCalc.h
+		repulsionCalc.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -32,6 +33,7 @@ target_sources(${PROJECT_NAME}
 		Energy/gravity.cpp
 		phyScene.cpp
 		neoHookeanCalc.cpp
+		repulsionCalc.cpp
 )
 
 target_link_directories(${PROJECT_NAME}
