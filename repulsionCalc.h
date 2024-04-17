@@ -6,6 +6,7 @@
 #define IPC2DSIM_REPULSIONCALC_H
 
 #include "eigen-3.4.0/Eigen/Core"
+#include "eigen-3.4.0/Eigen/Dense"
 
 enum class EPointEdgeDistanceType
 {
@@ -34,6 +35,13 @@ struct repulsivePair
 
     repulsivePair(unsigned int i, unsigned j, EPointEdgeDistanceType petype);
 };
+
+float repulsion(float d, float dhat);
+float repulsionFirstDerivative(float d, float dhat);
+float repulsionSecondDerivative(float d, float dhat);
+
+void spdProjection6x6(float b[36]);
+
 
 
 #endif //IPC2DSIM_REPULSIONCALC_H

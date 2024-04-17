@@ -130,7 +130,7 @@ void phyScene::oneTimestepImpl(float dt)
         calcSearchDir();
 
         //debug
-        /*
+
         std::vector<float> temp3;
         for(float i : energyGradient)
         {
@@ -141,7 +141,7 @@ void phyScene::oneTimestepImpl(float dt)
         {
             temp4.push_back(i);
         }
-        */
+
 
         iter++;
     }
@@ -278,7 +278,7 @@ float phyScene::barrierEnergyVal(float alpha)
         if(d < dhat)
         {
             float s = d / dhat;
-            sum += dhat * kappa / 2 * (s - 1) * log(s) * contactArea[i];
+            sum += dhat * kappa / 2 * (s - 1) * std::log(s) * contactArea[i];
         }
     }
     return sum;
@@ -490,28 +490,25 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 float d = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x()) / length;
                 if(d < dhat)
                 {
-                    float s = d / dhat;
-                    sum += contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E);
                 }
             }
             else if(petype == EPointEdgeDistanceType::P_E0)
             {
-                float d = (p - e0).norm();
-                if(d < dhat)
+                float dsq = (p - e0).squaredNorm();
+                if(dsq < dhat * dhat)
                 {
-                    float s = d / dhat;
-                    sum += contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E0);
                 }
             }
             else if(petype == EPointEdgeDistanceType::P_E1)
             {
-                float d = (p - e1).norm();
-                if(d < dhat)
+                float dsq = (p - e1).squaredNorm();
+                if(dsq < dhat * dhat)
                 {
-                    float s = d / dhat;
-                    sum += contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E1);
                 }
             }
@@ -528,44 +525,60 @@ void phyScene::calcRepulsiveEnergyGradient(float dt)
 {
     for(auto repPair : repPairlst)
     {
+        float w = contactArea[repPair.pt_idx] * dhat;
+        unsigned int idx = repPair.pt_idx;
+        unsigned int idx0 = edges[repPair.edge_idx].first;
+        unsigned int idx1 = edges[repPair.edge_idx].second;
+        Eigen::Vector2f e0 = vertices[idx0];
+        Eigen::Vector2f e1 = vertices[idx1];
+        Eigen::Vector2f p = vertices[idx];
+
         if(repPair.PE_type == EPointEdgeDistanceType::P_E)
         {
+            // distance
+            float lensq = (e0 - e1).squaredNorm();
+            Eigen::Vector2f e0p = e0 - p;
+            Eigen::Vector2f e1p = e1 - p;
+            float area = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x());
+            float dsq = area * area / lensq;
+
+            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+
             float grad[6];
-            unsigned int idx0 = edges[repPair.edge_idx].first;
-            unsigned int idx1 = edges[repPair.edge_idx].second;
-            float a = vertices[repPair.pt_idx](0);
-            float b = vertices[repPair.pt_idx](1);
+
+            float a = vertices[idx](0);
+            float b = vertices[idx](1);
             float c = vertices[idx0](0);
             float d = vertices[idx0](1);
             float e = vertices[idx1](0);
             float f = vertices[idx1](1);
             point_line_distance_gradient_2D(a,b,c,d,e,f,grad);
-            energyGradient(2 * repPair.pt_idx) += dt * dt * grad[0];
-            energyGradient(2 * repPair.pt_idx + 1) += dt * dt * grad[1];
-            energyGradient(2 * idx0) += dt * dt * grad[2];
-            energyGradient(2 * idx0 + 1) += dt * dt * grad[3];
-            energyGradient(2 * idx1) += dt * dt * grad[4];
-            energyGradient(2 * idx1 + 1) += dt * dt * grad[5];
+            energyGradient(2 * repPair.pt_idx) += dt * dt * grad[0] * w * grad_f;
+            energyGradient(2 * repPair.pt_idx + 1) += dt * dt * grad[1] * w * grad_f;
+            energyGradient(2 * idx0) += dt * dt * grad[2] * w * grad_f;
+            energyGradient(2 * idx0 + 1) += dt * dt * grad[3] * w * grad_f;
+            energyGradient(2 * idx1) += dt * dt * grad[4] * w * grad_f;
+            energyGradient(2 * idx1 + 1) += dt * dt * grad[5] * w * grad_f;
         }
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E0)
         {
-            unsigned int idx = repPair.pt_idx;
-            unsigned int idx0 = edges[repPair.edge_idx].first;
+            float dsq = (p - e0).squaredNorm();
+            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
             Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx0]);
-            energyGradient(2 * idx) += dt * dt * grad[0];
-            energyGradient(2 * idx + 1) += dt * dt * grad[1];
-            energyGradient(2 * idx0) += dt * dt * grad[2];
-            energyGradient(2 * idx0 + 1) += dt * dt * grad[3];
+            energyGradient(2 * idx) += dt * dt * grad[0] * w * grad_f;
+            energyGradient(2 * idx + 1) += dt * dt * grad[1] * w * grad_f;
+            energyGradient(2 * idx0) += dt * dt * grad[2] * w * grad_f;
+            energyGradient(2 * idx0 + 1) += dt * dt * grad[3] * w * grad_f;
         }
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E1)
         {
-            unsigned int idx = repPair.pt_idx;
-            unsigned int idx1 = edges[repPair.edge_idx].second;
+            float dsq = (p - e1).squaredNorm();
+            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
             Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx1]);
-            energyGradient(2 * idx) += dt * dt * grad[0];
-            energyGradient(2 * idx + 1) += dt * dt * grad[1];
-            energyGradient(2 * idx1) += dt * dt * grad[2];
-            energyGradient(2 * idx1 + 1) += dt * dt * grad[3];
+            energyGradient(2 * idx) += dt * dt * grad[0] * w * grad_f;
+            energyGradient(2 * idx + 1) += dt * dt * grad[1] * w * grad_f;
+            energyGradient(2 * idx1) += dt * dt * grad[2] * w * grad_f;
+            energyGradient(2 * idx1 + 1) += dt * dt * grad[3] * w * grad_f;
         }
         else
         {
@@ -578,28 +591,55 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
 {
     for(auto repPair : repPairlst)
     {
+        float w = contactArea[repPair.pt_idx] * dhat;
+        unsigned int idx = repPair.pt_idx;
+        unsigned int idx0 = edges[repPair.edge_idx].first;
+        unsigned int idx1 = edges[repPair.edge_idx].second;
+        Eigen::Vector2f e0 = vertices[idx0];
+        Eigen::Vector2f e1 = vertices[idx1];
+        Eigen::Vector2f p = vertices[idx];
+
         if(repPair.PE_type == EPointEdgeDistanceType::P_E)
         {
+            float lensq = (e0 - e1).squaredNorm();
+            Eigen::Vector2f e0p = e0 - p;
+            Eigen::Vector2f e1p = e1 - p;
+            float area = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x());
+            float dsq = area * area / lensq;
+
+            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+
+            // \delta d
+            float grad[6];
+            // \delta^2 d
             float hess[36];
-            unsigned int idx = repPair.pt_idx;
-            unsigned int idx0 = edges[repPair.edge_idx].first;
-            unsigned int idx1 = edges[repPair.edge_idx].second;
+
             float a = vertices[idx](0);
             float b = vertices[idx](1);
             float c = vertices[idx0](0);
             float d = vertices[idx0](1);
             float e = vertices[idx1](0);
             float f = vertices[idx1](1);
+            point_line_distance_gradient_2D(a,b,c,d,e,f,grad);
             point_line_distance_hessian_2D(a,b,c,d,e,f,hess);
-            energyHessian.emplace_back(2 * idx, 2 * idx, hess[0]);
-            energyHessian.emplace_back(2 * idx, 2 * idx + 1, hess[1]);
-            energyHessian.emplace_back(2 * idx + 1, 2 * idx, hess[6]);
-            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, hess[7]);
 
-            energyHessian.emplace_back(2 * idx0, 2 * idx0, hess[14]);
-            energyHessian.emplace_back(2 * idx0, 2 * idx0 + 1, hess[15]);
-            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0, hess[20]);
-            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0 + 1, hess[21]);
+            float ddT[36];
+            for(int i = 0; i < 6; i++)
+            {
+                for(int j = 0; j < 6; j++)
+                {
+                    ddT[6 * i + j] = grad[i] * grad[j] * hess_f * w;
+                }
+            }
+
+            // assemble hessian
+            for(int i = 0; i < 36; i++)
+            {
+                hess[i] = hess[i] * grad_f * w + ddT[i];
+            }
+
+            spdProjection6x6(hess);
 
             for (int i = 0; i < 2; ++i) {
                 for (int j = 0; j < 2; ++j) {
@@ -642,36 +682,84 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
         }
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E0)
         {
-            unsigned int idx = repPair.pt_idx;
-            unsigned int idx0 = edges[repPair.edge_idx].first;
+            float dsq = (p - e0).squaredNorm();
+            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx0]);
+            Eigen::Matrix4f hess = grad * grad.transpose();
+            hess = w * hess_f * hess;
+            float factor = grad_f * w;
+            hess(0, 0) += 2 * factor;
+            hess(1, 1) += 2 * factor;
+            hess(2, 2) += 2 * factor;
+            hess(3, 3) += 2 * factor;
+            hess(2, 0) -= 2 * factor;
+            hess(3, 1) -= 2 * factor;
+            hess(0, 2) -= 2 * factor;
+            hess(1, 3) -= 2 * factor;
 
-            energyHessian.emplace_back(2 * idx, 2 * idx, 2 * dt * dt);
-            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, 2 * dt * dt);
-            energyHessian.emplace_back(2 * idx0, 2 * idx0, 2 * dt * dt);
-            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0 + 1, 2 * dt * dt);
+            hess = spdProjection(hess);
 
-            energyHessian.emplace_back(2 * idx, 2 * idx0, -2 * dt * dt);
-            energyHessian.emplace_back(2 * idx + 1, 2 * idx0 + 1, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx, 2 * idx, hess(0, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, hess(1, 1) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx, hess(1, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx, 2 * idx + 1, hess(0, 1) * dt * dt);
 
-            energyHessian.emplace_back(2 * idx0, 2 * idx, -2 * dt * dt);
-            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx + 1, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx0, 2 * idx0, hess(2, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0 + 1, hess(3, 3) * dt * dt);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx0, hess(3, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx0, 2 * idx0 + 1, hess(2, 3) * dt * dt);
+
+            energyHessian.emplace_back(2 * idx, 2 * idx0, hess(0, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx0 + 1, hess(1, 3) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx0, hess(1, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx, 2 * idx0 + 1, hess(0, 3) * dt * dt);
+
+            energyHessian.emplace_back(2 * idx0, 2 * idx, hess(2, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx + 1, hess(3, 1) * dt * dt);
+            energyHessian.emplace_back(2 * idx0 + 1, 2 * idx, hess(3, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx0, 2 * idx + 1, hess(2, 1) * dt * dt);
 
         }
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E1)
         {
-            unsigned int idx = repPair.pt_idx;
-            unsigned int idx1 = edges[repPair.edge_idx].second;
+            float dsq = (p - e1).squaredNorm();
+            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx1]);
+            Eigen::Matrix4f hess = grad * grad.transpose();
+            hess = w * hess_f * hess;
+            float factor = grad_f * w;
+            hess(0, 0) += 2 * factor;
+            hess(1, 1) += 2 * factor;
+            hess(2, 2) += 2 * factor;
+            hess(3, 3) += 2 * factor;
+            hess(2, 0) -= 2 * factor;
+            hess(3, 1) -= 2 * factor;
+            hess(0, 2) -= 2 * factor;
+            hess(1, 3) -= 2 * factor;
 
-            energyHessian.emplace_back(2 * idx, 2 * idx, 2 * dt * dt);
-            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, 2 * dt * dt);
-            energyHessian.emplace_back(2 * idx1, 2 * idx1, 2 * dt * dt);
-            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx1 + 1, 2 * dt * dt);
+            hess = spdProjection(hess);
 
-            energyHessian.emplace_back(2 * idx, 2 * idx1, -2 * dt * dt);
-            energyHessian.emplace_back(2 * idx + 1, 2 * idx1 + 1, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx, 2 * idx, hess(0, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx + 1, hess(1, 1) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx, hess(1, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx, 2 * idx + 1, hess(0, 1) * dt * dt);
 
-            energyHessian.emplace_back(2 * idx1, 2 * idx, -2 * dt * dt);
-            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx + 1, -2 * dt * dt);
+            energyHessian.emplace_back(2 * idx1, 2 * idx1, hess(2, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx1 + 1, hess(3, 3) * dt * dt);
+            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx1, hess(3, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx1, 2 * idx1 + 1, hess(2, 3) * dt * dt);
+
+            energyHessian.emplace_back(2 * idx, 2 * idx1, hess(0, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx1 + 1, hess(1, 3) * dt * dt);
+            energyHessian.emplace_back(2 * idx + 1, 2 * idx1, hess(1, 2) * dt * dt);
+            energyHessian.emplace_back(2 * idx, 2 * idx1 + 1, hess(0, 3) * dt * dt);
+
+            energyHessian.emplace_back(2 * idx1, 2 * idx, hess(2, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx + 1, hess(3, 1) * dt * dt);
+            energyHessian.emplace_back(2 * idx1 + 1, 2 * idx, hess(3, 0) * dt * dt);
+            energyHessian.emplace_back(2 * idx1, 2 * idx + 1, hess(2, 1) * dt * dt);
         }
         else
         {

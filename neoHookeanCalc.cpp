@@ -4,6 +4,8 @@
 
 #include "neoHookeanCalc.h"
 
+#include <cmath>
+
 
 Eigen::Matrix4f spdProjection(const Eigen::Matrix4f& hess)
 {
@@ -40,7 +42,7 @@ Eigen::Matrix2f spdProjection2d(const Eigen::Matrix2f& F)
 float Psi(const Eigen::Matrix2f& F, float mu, float lam)
 {
     float J = F.determinant();
-    float lnJ = log(J);
+    float lnJ = std::log(J);
     Eigen::Matrix2f temp = F.transpose() * F;
     float trace = temp.trace();
     return mu / 2 * (trace - 2) - mu * lnJ + lam / 2 * lnJ * lnJ;
@@ -67,7 +69,7 @@ std::tuple<Eigen::Matrix2f, Eigen::Vector2f, Eigen::Matrix2f> polarSVD(const Eig
 
 Eigen::Vector2f dPsi_dSigma(const Eigen::Vector2f& s, float mu, float lam)
 {
-    float prod = log(s(0) * s(1));
+    float prod = std::log(s(0) * s(1));
     float inv0 = 1.0f / s(0);
     float inv1 = 1.0f / s(1);
     float res0 = mu * (s(0) - inv0) + lam * inv0 * prod;
@@ -77,7 +79,7 @@ Eigen::Vector2f dPsi_dSigma(const Eigen::Vector2f& s, float mu, float lam)
 
 Eigen::Matrix2f d2Psi_dSigma2(const Eigen::Vector2f& s, float mu, float lam)
 {
-    float prod = log(s(0) * s(1));
+    float prod = std::log(s(0) * s(1));
     float inv2_0 = 1 / (s(0) * s(0));
     float inv2_1 = 1 / (s(1) * s(1));
     float res00 = mu * (1 + inv2_0) - lam * inv2_0 * (prod - 1);

@@ -12,7 +12,7 @@
 #include "neoHookeanCalc.h"
 #include "repulsionCalc.h"
 
-
+const float dmin = 0.001f;
 const float stiffness = 1e5;
 const float tolerance = 2e-2;
 const Eigen::Vector2f gravity(0.0f, -9.81f);

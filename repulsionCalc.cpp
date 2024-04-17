@@ -4,6 +4,8 @@
 
 #include "repulsionCalc.h"
 
+#include <cmath>
+
 repulsivePair::repulsivePair(unsigned int i, unsigned int j, EPointEdgeDistanceType petype)
 {
     pt_idx = i;
@@ -100,7 +102,7 @@ void point_line_distance_hessian_2D(
     t31 = 1.0f / (t23 + t24);
     t34 = ((v11 * v22 + -(v12 * v21)) + t20 * v01) + -(t19 * v02);
     t32 = t31 * t31;
-    t33 = pow(t31, 3.0f);
+    t33 = std::pow(t31, 3.0f);
     t35 = t34 * t34;
     t60 = t31 * t34 * 2.0f;
     t59 = -(t19 * t20 * t31 * 2.0f);
@@ -202,5 +204,57 @@ float minAlphaToPassThru(const Eigen::Vector2f& p, const Eigen::Vector2f& dir, c
         return 1.0f;
     }
     float ttt = 1.0f;
-    return t;
+    return t * 0.9f;
 }
+
+float repulsion(float d, float dhat)
+{
+    if(d <= 0.0f)
+    {
+        return std::numeric_limits<float>::infinity();
+    }
+    if(d >= dhat)
+    {
+        return 0.0f;
+    }
+    return -(d - dhat) * (d - dhat) * std::log(d / dhat);
+}
+
+float repulsionFirstDerivative(float d, float dhat)
+{
+    if (d <= 0.0f || d >= dhat) {
+        return 0.0f;
+    }
+
+    return (dhat - d) * (2 * std::log(d / dhat) - dhat / d + 1);
+}
+
+
+float repulsionSecondDerivative(float d, float dhat)
+{
+    if (d <= 0.0f || d >= dhat) {
+        return 0.0f;
+    }
+    const float dhat_d = dhat / d;
+    return (dhat_d + 2) * dhat_d - 2 * std::log(d / dhat) - 3;
+}
+
+// in-place operation
+void spdProjection6x6(float b[36])
+{
+    Eigen::Map<Eigen::Matrix<float, 6, 6, Eigen::RowMajor>> mat(b);
+
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<float, 6, 6, Eigen::RowMajor>> solver(mat);
+    Eigen::VectorXf lam = solver.eigenvalues();
+    Eigen::Matrix<float, 6, 6, Eigen::RowMajor> V = solver.eigenvectors();
+
+    for(int i = 0; i < lam.size(); i++)
+    {
+        lam(i) = std::max(0.0f, lam(i));
+    }
+
+    Eigen::Matrix<float, 6, 6, Eigen::RowMajor> diagLam = lam.asDiagonal();
+
+    mat = V * diagLam * V.transpose();
+}
+
