@@ -292,7 +292,7 @@ void phyScene::calcBarrierEnergyGradient(float dt)
         if(d < dhat)
         {
             float s = d / dhat;
-            energyGradient[2 * i + 1] += dt * dt * contactArea[i] * dhat * (kappa / 2 * (log(s) / dhat + (s - 1) / d));
+            energyGradient[2 * i + 1] += dt * dt * contactArea[i] * dhat * (kappa / 2 * (std::log(s) / dhat + (s - 1) / d));
         }
     }
 }
@@ -490,7 +490,8 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 float d = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x()) / length;
                 if(d < dhat)
                 {
-                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
+                    //sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d, dhat * dhat) * kappa * 1000.0f;
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E);
                 }
             }
@@ -499,7 +500,8 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 float dsq = (p - e0).squaredNorm();
                 if(dsq < dhat * dhat)
                 {
-                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
+                    //sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq, dhat * dhat) * kappa * 1000.0f;
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E0);
                 }
             }
@@ -508,7 +510,8 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 float dsq = (p - e1).squaredNorm();
                 if(dsq < dhat * dhat)
                 {
-                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
+                    //sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq, dhat * dhat) * kappa * 1000.0f;
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E1);
                 }
             }
@@ -525,7 +528,7 @@ void phyScene::calcRepulsiveEnergyGradient(float dt)
 {
     for(auto repPair : repPairlst)
     {
-        float w = contactArea[repPair.pt_idx] * dhat;
+        float w = contactArea[repPair.pt_idx] * dhat * kappa / 2 * kappa * 1000.0f;
         unsigned int idx = repPair.pt_idx;
         unsigned int idx0 = edges[repPair.edge_idx].first;
         unsigned int idx1 = edges[repPair.edge_idx].second;
@@ -542,7 +545,8 @@ void phyScene::calcRepulsiveEnergyGradient(float dt)
             float area = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x());
             float dsq = area * area / lensq;
 
-            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float grad_f = repulsionFirstDerivative(dsq, dhat * dhat);
 
             float grad[6];
 
@@ -563,7 +567,8 @@ void phyScene::calcRepulsiveEnergyGradient(float dt)
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E0)
         {
             float dsq = (p - e0).squaredNorm();
-            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float grad_f = repulsionFirstDerivative(dsq, dhat * dhat);
             Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx0]);
             energyGradient(2 * idx) += dt * dt * grad[0] * w * grad_f;
             energyGradient(2 * idx + 1) += dt * dt * grad[1] * w * grad_f;
@@ -573,7 +578,8 @@ void phyScene::calcRepulsiveEnergyGradient(float dt)
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E1)
         {
             float dsq = (p - e1).squaredNorm();
-            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float grad_f = repulsionFirstDerivative(dsq, dhat * dhat);
             Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx1]);
             energyGradient(2 * idx) += dt * dt * grad[0] * w * grad_f;
             energyGradient(2 * idx + 1) += dt * dt * grad[1] * w * grad_f;
@@ -591,7 +597,7 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
 {
     for(auto repPair : repPairlst)
     {
-        float w = contactArea[repPair.pt_idx] * dhat;
+        float w = contactArea[repPair.pt_idx] * dhat * kappa / 2 * kappa * 1000.0f;
         unsigned int idx = repPair.pt_idx;
         unsigned int idx0 = edges[repPair.edge_idx].first;
         unsigned int idx1 = edges[repPair.edge_idx].second;
@@ -607,8 +613,10 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
             float area = std::abs(e0p.x() * e1p.y() - e0p.y() * e1p.x());
             float dsq = area * area / lensq;
 
-            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
-            float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float grad_f = repulsionFirstDerivative(dsq, dhat * dhat);
+            float hess_f = repulsionSecondDerivative(dsq, dhat * dhat);
 
             // \delta d
             float grad[6];
@@ -683,8 +691,10 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E0)
         {
             float dsq = (p - e0).squaredNorm();
-            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
-            float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float grad_f = repulsionFirstDerivative(dsq, dhat * dhat);
+            float hess_f = repulsionSecondDerivative(dsq, dhat * dhat);
             Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx0]);
             Eigen::Matrix4f hess = grad * grad.transpose();
             hess = w * hess_f * hess;
@@ -724,8 +734,10 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
         else if(repPair.PE_type == EPointEdgeDistanceType::P_E1)
         {
             float dsq = (p - e1).squaredNorm();
-            float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
-            float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float grad_f = repulsionFirstDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            //float hess_f = repulsionSecondDerivative(dsq - dmin * dmin, 2 * dmin * dhat + dhat * dhat);
+            float grad_f = repulsionFirstDerivative(dsq, dhat * dhat);
+            float hess_f = repulsionSecondDerivative(dsq, dhat * dhat);
             Eigen::Vector4f grad = point_point_dist_gradient(vertices[idx], vertices[idx1]);
             Eigen::Matrix4f hess = grad * grad.transpose();
             hess = w * hess_f * hess;
