@@ -491,7 +491,7 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 if(d < dhat)
                 {
                     //sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
-                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d, dhat * dhat) * kappa * 1000.0f;
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(d * d, dhat * dhat) * amplifier;
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E);
                 }
             }
@@ -501,7 +501,7 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 if(dsq < dhat * dhat)
                 {
                     //sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
-                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq, dhat * dhat) * kappa * 1000.0f;
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq, dhat * dhat) * amplifier;
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E0);
                 }
             }
@@ -511,7 +511,7 @@ float phyScene::repulsiveEnergyVal(float alpha)
                 if(dsq < dhat * dhat)
                 {
                     //sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq - dmin * dmin, dhat * dhat + 2 * dmin * dhat);
-                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq, dhat * dhat) * kappa * 1000.0f;
+                    sum += contactArea[i] * dhat * kappa / 2 * repulsion(dsq, dhat * dhat) * amplifier;
                     repPairlst.emplace_back(i, j, EPointEdgeDistanceType::P_E1);
                 }
             }
@@ -528,7 +528,7 @@ void phyScene::calcRepulsiveEnergyGradient(float dt)
 {
     for(auto repPair : repPairlst)
     {
-        float w = contactArea[repPair.pt_idx] * dhat * kappa / 2 * kappa * 1000.0f;
+        float w = contactArea[repPair.pt_idx] * dhat * kappa / 2 * amplifier;
         unsigned int idx = repPair.pt_idx;
         unsigned int idx0 = edges[repPair.edge_idx].first;
         unsigned int idx1 = edges[repPair.edge_idx].second;
@@ -597,7 +597,7 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
 {
     for(auto repPair : repPairlst)
     {
-        float w = contactArea[repPair.pt_idx] * dhat * kappa / 2 * kappa * 1000.0f;
+        float w = contactArea[repPair.pt_idx] * dhat * kappa / 2 * amplifier;
         unsigned int idx = repPair.pt_idx;
         unsigned int idx0 = edges[repPair.edge_idx].first;
         unsigned int idx1 = edges[repPair.edge_idx].second;
