@@ -16,6 +16,6 @@
 
 void modelInit();
 
-
+void modelInit_utest(const std::string &filename);
 
 #endif //IPC2DSIM_MODELINIT_H

@@ -258,3 +258,7 @@ void spdProjection6x6(float b[36])
     mat = V * diagLam * V.transpose();
 }
 
+float crossProduct(const Eigen::Vector2f& v, const Eigen::Vector2f& a, const Eigen::Vector2f& b)
+{
+    return (a(0) - v(0)) * (b(1) - v(1)) - (a(1) - v(1)) * (b(0) - v(0));
+}

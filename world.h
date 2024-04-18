@@ -36,6 +36,8 @@ public:
 
     void simulate(float dt);
 
+    void clear();
+
     std::vector<Object> objList;
     phyScene physics;
 

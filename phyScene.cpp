@@ -8,6 +8,10 @@
 //#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
 //#include "eigen-3.4.0/Eigen/src/OrderingMethods/Ordering.h"
 
+extern bool bUnitTest;
+extern bool bPenetration;
+extern unsigned int checkedIdx;
+
 float infnorm(const Eigen::VectorXf& vec)
 {
     unsigned int sz = vec.size();
@@ -151,6 +155,16 @@ void phyScene::oneTimestepImpl(float dt)
     {
         velocities[i] = (vertices[i] - prevVertices[i]) / dt;
     }
+
+    // for unit tests
+    if(bUnitTest)
+    {
+        if(bAnyPenetration())
+        {
+            bPenetration = true;
+        }
+    }
+
 }
 
 
@@ -781,4 +795,49 @@ void phyScene::calcRepulsiveEnergyHessian(float dt)
 }
 
 
+bool phyScene::b2TrianglesIntersect(unsigned int idx1, unsigned int idx2)
+{
+    for(unsigned int i = 0; i < 3; i++)
+    {
+        for(unsigned int j = 0; j < 3; j++)
+        {
+            if(eidx[idx1](i) == eidx[idx2](j))
+                return false;
+        }
+    }
 
+    for(unsigned int i = 0; i < 3; i++)
+    {
+        Eigen::Vector2f v = vertices[eidx[idx1](i)];
+        Eigen::Vector2f v0 = vertices[eidx[idx2](0)];
+        Eigen::Vector2f v1 = vertices[eidx[idx2](1)];
+        Eigen::Vector2f v2 = vertices[eidx[idx2](2)];
+
+        float c1 = crossProduct(v0, v1, v);
+        float c2 = crossProduct(v1, v2, v);
+        float c3 = crossProduct(v2, v0, v);
+
+        bool bSameSign = (c1 >= 0 && c2 >= 0 && c3 >= 0) || (c1 <= 0 && c2 <= 0 && c3 <= 0);
+        if(bSameSign)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool phyScene::bAnyPenetration()
+{
+    unsigned int sz = eidx.size();
+    for(unsigned int i = 0; i < sz; i++)
+    {
+        for(unsigned int j = i + 1; j < sz; j++)
+        {
+            if(b2TrianglesIntersect(i, j))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}

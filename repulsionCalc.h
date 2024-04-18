@@ -42,6 +42,6 @@ float repulsionSecondDerivative(float d, float dhat);
 
 void spdProjection6x6(float b[36]);
 
-
+float crossProduct(const Eigen::Vector2f& v, const Eigen::Vector2f& a, const Eigen::Vector2f& b);
 
 #endif //IPC2DSIM_REPULSIONCALC_H

@@ -23,6 +23,7 @@ const float amplifier = 1e8;
 const float E = 1e5f; // Young's module
 const float nu = 0.4f; // Poisson ratio
 
+
 class phyScene
 {
 public:
@@ -96,6 +97,11 @@ public:
     void calcRepulsiveEnergyGradient(float dt);
     void calcRepulsiveEnergyHessian(float dt);
 
+
+    // =======
+
+    bool b2TrianglesIntersect(unsigned int idx1, unsigned int idx2);
+    bool bAnyPenetration();
 };
 
 
