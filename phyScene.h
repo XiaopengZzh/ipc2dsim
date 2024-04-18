@@ -102,6 +102,11 @@ public:
 
     bool b2TrianglesIntersect(unsigned int idx1, unsigned int idx2);
     bool bAnyPenetration();
+
+    bool b2TrianglesIntersect_ccd(unsigned int idx1, unsigned int idx2, float alpha);
+    bool bAnyPenetration_ccd(float alpha);
+
+    float binarySearch_ccd(float low, float high, float precision);
 };
 
 

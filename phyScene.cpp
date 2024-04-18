@@ -352,6 +352,15 @@ float phyScene::ccd()
         }
     }
 
+    if(!bAnyPenetration_ccd(alpha))
+    {
+        return alpha;
+    }
+    else
+    {
+        alpha = binarySearch_ccd(0.0f, alpha, 0.1f);
+    }
+
     return alpha;
 }
 
@@ -840,4 +849,87 @@ bool phyScene::bAnyPenetration()
         }
     }
     return false;
+}
+
+bool phyScene::b2TrianglesIntersect_ccd(unsigned int idx1, unsigned int idx2, float alpha)
+{
+    for(unsigned int i = 0; i < 3; i++)
+    {
+        for(unsigned int j = 0; j < 3; j++)
+        {
+            if(eidx[idx1](i) == eidx[idx2](j))
+                return false;
+        }
+    }
+
+    for(unsigned int i = 0; i < 3; i++)
+    {
+        unsigned int vidx = eidx[idx1](i);
+        unsigned int vidx0 = eidx[idx2](0);
+        unsigned int vidx1 = eidx[idx2](1);
+        unsigned int vidx2 = eidx[idx2](2);
+        Eigen::Vector2f v = vertices[vidx];
+        Eigen::Vector2f v0 = vertices[vidx0];
+        Eigen::Vector2f v1 = vertices[vidx1];
+        Eigen::Vector2f v2 = vertices[vidx2];
+        v(0) += alpha * searchDir(2 * vidx);
+        v(1) += alpha * searchDir(2 * vidx + 1);
+        v0(0) += alpha * searchDir(2 * vidx0);
+        v0(1) += alpha * searchDir(2 * vidx0 + 1);
+        v1(0) += alpha * searchDir(2 * vidx1);
+        v1(1) += alpha * searchDir(2 * vidx1 + 1);
+        v2(0) += alpha * searchDir(2 * vidx2);
+        v2(1) += alpha * searchDir(2 * vidx2 + 1);
+
+        float c1 = crossProduct(v0, v1, v);
+        float c2 = crossProduct(v1, v2, v);
+        float c3 = crossProduct(v2, v0, v);
+
+        bool bSameSign = (c1 >= 0 && c2 >= 0 && c3 >= 0) || (c1 <= 0 && c2 <= 0 && c3 <= 0);
+        if(bSameSign)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool phyScene::bAnyPenetration_ccd(float alpha)
+{
+    unsigned int sz = eidx.size();
+    for(unsigned int i = 0; i < sz; i++)
+    {
+        for(unsigned int j = i + 1; j < sz; j++)
+        {
+            if(b2TrianglesIntersect_ccd(i, j, alpha))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+float phyScene::binarySearch_ccd(float low, float high, float precision)
+{
+    if(high <= low)
+    {
+        return low;
+    }
+
+    float mid;
+    while(high - low > precision)
+    {
+        mid = low + (high - low) / 2;
+        bool bPnt = bAnyPenetration_ccd(mid);
+        if(bPnt)
+        {
+            high = mid;
+        }
+        else
+        {
+            low = mid;
+        }
+    }
+    return (low + high) / 2;
 }
