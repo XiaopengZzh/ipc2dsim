@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(ipc2dsim)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} dev.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 11
@@ -41,6 +41,13 @@ target_link_directories(${PROJECT_NAME}
 		${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.4.0
 		${CMAKE_CURRENT_SOURCE_DIR}/Energy
 )
+
+find_package(Catch2 REQUIRED PATHS /opt/homebrew/lib/cmake/Catch2)
+
+target_link_libraries(${PROJECT_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
+
+target_include_directories(${PROJECT_NAME} PRIVATE /opt/homebrew/include)
+
 
 if(APPLE OR WIN32)
 

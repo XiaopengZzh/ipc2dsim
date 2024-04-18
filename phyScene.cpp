@@ -8,6 +8,10 @@
 //#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
 //#include "eigen-3.4.0/Eigen/src/OrderingMethods/Ordering.h"
 
+extern bool bUnitTest;
+extern bool bRebounded;
+extern unsigned int checkedIdx;
+
 float infnorm(const Eigen::VectorXf& vec)
 {
     unsigned int sz = vec.size();
@@ -151,6 +155,16 @@ void phyScene::oneTimestepImpl(float dt)
     {
         velocities[i] = (vertices[i] - prevVertices[i]) / dt;
     }
+
+    // for unit tests
+    if(bUnitTest)
+    {
+        if(velocities[checkedIdx].y() > 1.0f)
+        {
+            bRebounded = true;
+        }
+    }
+
 }
 
 

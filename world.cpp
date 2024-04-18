@@ -132,3 +132,10 @@ void world::simulate(float dt)
     physics.oneTimestepImpl(dt);
     broadcastLocations();
 }
+
+void world::clear()
+{
+    objList.clear();
+    physics = phyScene();
+    // bRoundbouned?
+}

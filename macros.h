@@ -12,9 +12,4 @@ const unsigned int SCR_HEIGHT = 600;
 #define ZFAR 1000.0f
 
 
-
-
-
-
-
 #endif //IPC2DSIM_MACROS_H
