@@ -21,6 +21,7 @@ const float dhat = 0.01f;
 const float kappa = 1e5;
 const float amplifier = 1e8;
 const float E = 1e5f; // Young's module
+//const float E = 1e4f;
 const float nu = 0.4f; // Poisson ratio
 
 

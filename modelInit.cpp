@@ -17,7 +17,7 @@ void modelInit()
 
     if(!bUnitTest)
     {
-        world->CreateObject("../model/2triangles.xyz", EObjectType::DYNAMIC, simshader);
+        world->CreateObject("../model/bent.xyz", EObjectType::DYNAMIC, simshader);
     }
     //world->CreateObject("../model/tetrahedron.xyz", EObjectType::STATIC, simshader);
 
