@@ -10,7 +10,7 @@
 #include <sstream>
 #include <iostream>
 #include "glm/glm.hpp"
-#include "eigen-3.4.0/Eigen/Core"
+#include "Eigen/Core"
 
 class shader
 {

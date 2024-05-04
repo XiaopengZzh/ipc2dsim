@@ -8,7 +8,7 @@
 #include <glad/glad.h>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "eigen-3.4.0/Eigen/Dense"
+#include "Eigen/Dense"
 
 enum Camera_Movement
 {

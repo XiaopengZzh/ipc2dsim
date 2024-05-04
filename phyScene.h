@@ -5,9 +5,9 @@
 #ifndef IPC2DSIM_PHYSCENE_H
 #define IPC2DSIM_PHYSCENE_H
 
-#include "eigen-3.4.0/Eigen/Core"
-#include "eigen-3.4.0/Eigen/Sparse"
-#include "eigen-3.4.0/Eigen/SparseLU"
+#include "Eigen/Core"
+#include "Eigen/Sparse"
+#include "Eigen/SparseLU"
 #include <iostream>
 #include "neoHookeanCalc.h"
 #include "repulsionCalc.h"

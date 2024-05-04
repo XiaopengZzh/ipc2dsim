@@ -3,7 +3,7 @@
 //
 
 #include "phyScene.h"
-#include "eigen-3.4.0/Eigen/Dense"
+#include "Eigen/Dense"
 #include <cmath>
 //#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
 //#include "eigen-3.4.0/Eigen/src/OrderingMethods/Ordering.h"

@@ -5,9 +5,9 @@
 #ifndef IPC2DSIM_NEOHOOKEANCALC_H
 #define IPC2DSIM_NEOHOOKEANCALC_H
 
-#include "eigen-3.4.0/Eigen/Core"
+#include "Eigen/Core"
 #include <vector>
-#include "eigen-3.4.0/Eigen/Dense"
+#include "Eigen/Dense"
 #include <cmath>
 
 Eigen::Matrix4f spdProjection(const Eigen::Matrix4f& hess);

@@ -40,8 +40,12 @@ GLFWwindow* renderInit()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return nullptr;
     }
+    int width = SCR_WIDTH;
+    int height = SCR_HEIGHT;
 
-    glViewport(0, 0, 800, 600);
+    glfwGetFramebufferSize(window, &width, &height);
+    //glViewport(0, 0, 800, 600);
+    glViewport(0, 0, width, height);
 
     // register callback function to window resize.
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -103,6 +107,7 @@ void processInput(GLFWwindow* window)
 // a callback function used to resize the viewport with respect to resize of the window by users.
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 }
 

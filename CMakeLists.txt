@@ -14,12 +14,6 @@ target_sources(${PROJECT_NAME}
 		world.h
 		modelInit.h
 		utils.h
-		Energy/elasticity.h
-		Energy/gravity.h
-		Energy/inertia.h
-		Energy/sparseMatrix.h
-		Energy/spring.h
-		Energy/barrier.h
 		phyScene.h
 		neoHookeanCalc.h
 		repulsionCalc.h
@@ -30,7 +24,6 @@ target_sources(${PROJECT_NAME}
 		Object.cpp
 		world.cpp
 		modelInit.cpp
-		Energy/gravity.cpp
 		phyScene.cpp
 		neoHookeanCalc.cpp
 		repulsionCalc.cpp
@@ -48,6 +41,8 @@ target_link_libraries(${PROJECT_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
 
 target_include_directories(${PROJECT_NAME} PRIVATE /opt/homebrew/include)
 
+find_package(Eigen3 REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
 
 if(APPLE OR WIN32)
 

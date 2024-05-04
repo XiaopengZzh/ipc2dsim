@@ -5,8 +5,8 @@
 #ifndef IPC2DSIM_REPULSIONCALC_H
 #define IPC2DSIM_REPULSIONCALC_H
 
-#include "eigen-3.4.0/Eigen/Core"
-#include "eigen-3.4.0/Eigen/Dense"
+#include "Eigen/Core"
+#include "Eigen/Dense"
 
 enum class EPointEdgeDistanceType
 {

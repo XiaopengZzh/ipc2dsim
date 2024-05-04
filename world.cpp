@@ -3,8 +3,7 @@
 //
 
 #include "world.h"
-#include "eigen-3.4.0/Eigen/Core"
-
+#include "Eigen/Core"
 
 void append(std::vector<std::pair<unsigned int, unsigned int>>& edges,
             const std::vector<std::pair<unsigned int, unsigned int>>& edgesToAdd)

@@ -3,7 +3,7 @@
 #include "modelInit.h"
 #include "world.h"
 
-#include "eigen-3.4.0/Eigen/Dense"
+#include "Eigen/Dense"
 #include <chrono>
 
 #include <catch2/catch_all.hpp>
