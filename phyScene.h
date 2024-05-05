@@ -108,6 +108,11 @@ public:
     bool bAnyPenetration_ccd(float alpha);
 
     float binarySearch_ccd(float low, float high, float precision);
+
+    bool vertexEdgeCCD(float &alpha, const Eigen::Vector2f& v0, const Eigen::Vector2f& v1,
+                       const Eigen::Vector2f& f00, const Eigen::Vector2f& f01, const Eigen::Vector2f& f10,
+                       const Eigen::Vector2f& f11);
+
 };
 
 

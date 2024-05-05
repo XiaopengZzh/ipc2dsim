@@ -5,8 +5,7 @@
 #include "phyScene.h"
 #include "Eigen/Dense"
 #include <cmath>
-//#include "eigen-3.4.0/unsupported/Eigen/src/IterativeSolvers/Scaling.h"
-//#include "eigen-3.4.0/Eigen/src/OrderingMethods/Ordering.h"
+#include "tight_inclusion/ccd.hpp"
 
 extern bool bUnitTest;
 extern bool bPenetration;
@@ -93,6 +92,7 @@ void phyScene::oneTimestepImpl(float dt)
 
     // debug
 
+    /*
     std::vector<float> temp1;
     for(float i : energyGradient)
     {
@@ -103,7 +103,7 @@ void phyScene::oneTimestepImpl(float dt)
     {
         temp2.push_back(i);
     }
-
+    */
 
     while(infnorm(searchDir) > tolerance * dt)
     {
@@ -135,6 +135,7 @@ void phyScene::oneTimestepImpl(float dt)
 
         //debug
 
+        /*
         std::vector<float> temp3;
         for(float i : energyGradient)
         {
@@ -145,7 +146,7 @@ void phyScene::oneTimestepImpl(float dt)
         {
             temp4.push_back(i);
         }
-
+        */
 
         iter++;
     }
@@ -344,21 +345,22 @@ float phyScene::ccd()
             {
                 continue;
             }
-            Eigen::Vector2f dir;
+            Eigen::Vector2f dir, dir1, dir2;
             dir(0) = searchDir(2 * i);
             dir(1) = searchDir(2 * i + 1);
-            float t = minAlphaToPassThru(vertices[i], dir, vertices[edge.first], vertices[edge.second]);
-            alpha = std::min(t, alpha);
+            dir1(0) = searchDir(2 * edge.first);
+            dir1(1) = searchDir(2 * edge.first + 1);
+            dir2(0) = searchDir(2 * edge.second);
+            dir2(1) = searchDir(2 * edge.second + 1);
+            float talpha = 1.0f;
+            bool bCollide = vertexEdgeCCD(talpha, vertices[i], vertices[i] + dir, vertices[edge.first],
+                                          vertices[edge.first] + dir1, vertices[edge.second],
+                                          vertices[edge.second] + dir2);
+            if(bCollide)
+            {
+                alpha = std::min(talpha, alpha);
+            }
         }
-    }
-
-    if(!bAnyPenetration_ccd(alpha))
-    {
-        return alpha;
-    }
-    else
-    {
-        alpha = binarySearch_ccd(0.0f, alpha, 0.1f);
     }
 
     return alpha;
@@ -932,4 +934,23 @@ float phyScene::binarySearch_ccd(float low, float high, float precision)
         }
     }
     return (low + high) / 2;
+}
+
+bool phyScene::vertexEdgeCCD(float &alpha, const Eigen::Vector2f &v0, const Eigen::Vector2f &v1,
+                             const Eigen::Vector2f &f00, const Eigen::Vector2f &f01, const Eigen::Vector2f &f10,
+                             const Eigen::Vector2f &f11) {
+    Eigen::Vector3f tv0(v0(0), v0(1), 0.0f);
+    Eigen::Vector3f tv1(v1(0), v1(1), 0.0f);
+    Eigen::Vector3f tf00(f00(0), f00(1), 0.0f);
+    Eigen::Vector3f tf01(f01(0), f01(1), 0.0f);
+    Eigen::Vector3f tf10(f10(0), f10(1), 0.0f);
+    Eigen::Vector3f tf11(f11(0), f11(1), 0.0f);
+
+    float tor = 0.0f;
+    //bool bCollide = ticcd::vertexFaceCCD(tv0, tf00, tf10, tf20, tv1, tf01, tf11, tf21, {-1, -1, -1}, 0.001f, alpha, 1e-6, 1.0f, 100, tor)
+    bool bCollide = ticcd::edgeEdgeCCD(tv0, tv0, tf00, tf10, tv1, tv1, tf01, tf11,
+                                       Eigen::Array3f::Constant(-1.0f),
+                                       0.0001f, alpha, 1e-6, 1.0f, 1000, tor);
+
+    return bCollide;
 }

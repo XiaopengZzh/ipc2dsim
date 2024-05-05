@@ -5,7 +5,7 @@ project(ipc2dsim)
 add_executable(${PROJECT_NAME} dev.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-	CXX_STANDARD 11
+	CXX_STANDARD 17
 	CXX_STANDARD_REQUIRED YES)
 
 target_sources(${PROJECT_NAME}
@@ -27,12 +27,6 @@ target_sources(${PROJECT_NAME}
 		phyScene.cpp
 		neoHookeanCalc.cpp
 		repulsionCalc.cpp
-)
-
-target_link_directories(${PROJECT_NAME}
-	PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.4.0
-		${CMAKE_CURRENT_SOURCE_DIR}/Energy
 )
 
 find_package(Catch2 REQUIRED PATHS /opt/homebrew/lib/cmake/Catch2)
@@ -88,3 +82,18 @@ if(APPLE)
 	)
 endif()
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion)
+
+target_sources(${PROJECT_NAME} PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/avx.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/avx.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/ccd.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/ccd.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/interval_root_finder.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/interval_root_finder.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/interval.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/interval.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/timer.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tight_inclusion/types.hpp
+)
