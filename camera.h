@@ -6,9 +6,8 @@
 #define IPC2DSIM_CAMERA_H
 
 #include <glad/glad.h>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "Eigen/Dense"
+#include <cmath>
 
 enum Camera_Movement
 {
@@ -23,6 +22,7 @@ const float PITCH = 0.0f;
 const float SPEED = 25.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
+
 
 class Camera
 {
@@ -136,12 +136,17 @@ public:
 
 private:
 
+    static float radians(float degree)
+    {
+        return degree * M_PI / 180.0f;
+    }
+
     void UpdateCameraVectors()
     {
         Eigen::Vector3f front;
-        front[0] = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front[1] = sin(glm::radians(Pitch));
-        front[2] = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front[0] = cos(radians(Yaw)) * cos(radians(Pitch));
+        front[1] = sin(radians(Pitch));
+        front[2] = sin(radians(Yaw)) * cos(radians(Pitch));
         Front = front.normalized();
 
         Right = Front.cross(WorldUp).normalized();

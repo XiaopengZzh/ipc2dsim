@@ -16,8 +16,6 @@ bool bInEdges(unsigned int a, unsigned int b, std::vector<std::pair<unsigned int
 }
 
 
-
-
 Eigen::Matrix4f perspectiveMat(float fov, float aspect, float near, float far)
 {
     Eigen::Matrix4f mat = Eigen::Matrix4f::Zero();
@@ -114,7 +112,7 @@ void Object::Draw(Camera &cam)
     shaderInst.use();
     //shaderInst.setVec3("viewPos", cam.Position);
     shaderInst.setVec3("viewPos", cam.Position);
-    Eigen::Matrix4f projection = perspectiveMat(glm::radians(cam.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, ZNEAR, ZFAR);
+    Eigen::Matrix4f projection = perspectiveMat(cam.Zoom * M_PI / 180.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, ZNEAR, ZFAR);
     shaderInst.setMat4("projection", projection);
     Eigen::Matrix4f view = cam.GetViewMatrix();
     shaderInst.setMat4("view", view);

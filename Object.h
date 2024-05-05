@@ -7,12 +7,10 @@
 
 #include "macros.h"
 #include <glad.h>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include <vector>
 #include "shader.h"
 #include "camera.h"
+#include <cmath>
 //#include "utils.h"
 
 struct elementIndex

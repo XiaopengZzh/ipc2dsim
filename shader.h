@@ -9,7 +9,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "glm/glm.hpp"
 #include "Eigen/Core"
 
 class shader
