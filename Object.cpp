@@ -4,6 +4,7 @@
 
 #include "Object.h"
 #include <fstream>
+#include "macros.h"
 
 bool bInEdges(unsigned int a, unsigned int b, std::vector<std::pair<unsigned int, unsigned int>>& edges)
 {
@@ -60,7 +61,9 @@ Object::Object(const std::string &filename, EObjectType type, shader shaderInsta
         elementIndices.push_back(buf);
     }
 
+#if RENDER_ENABLE
     setupObject();
+#endif
 
     for(auto ind : elementIndices)
     {

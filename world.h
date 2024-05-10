@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include "phyScene.h"
+#include "macros.h"
 
 class world
 {
@@ -42,6 +43,8 @@ public:
     phyScene physics;
 
     Object yBarrier;
+
+    void saveOBJ(unsigned int frameCount);
 
 private:
     world();

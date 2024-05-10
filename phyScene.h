@@ -18,7 +18,7 @@ const float tolerance = 2e-2;
 const Eigen::Vector2f gravity(0.0f, -9.81f);
 const float yground = -10.0f;
 const float dhat = 0.01f;
-const float kappa = 1e5;
+const float kappa = 1e6;
 const float amplifier = 1e8;
 const float E = 1e5f; // Young's module
 //const float E = 1e4f;
@@ -112,6 +112,10 @@ public:
     bool vertexEdgeCCD(float &alpha, const Eigen::Vector2f& v0, const Eigen::Vector2f& v1,
                        const Eigen::Vector2f& f00, const Eigen::Vector2f& f01, const Eigen::Vector2f& f10,
                        const Eigen::Vector2f& f11);
+
+    // storage
+
+    void saveOBJ(unsigned int frameCount);
 
 };
 

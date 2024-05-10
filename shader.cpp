@@ -3,6 +3,7 @@
 //
 
 #include "shader.h"
+#include "macros.h"
 
 shader::shader()
 {
@@ -11,6 +12,7 @@ shader::shader()
 
 shader::shader(const char *vertexPath, const char *fragmentPath)
 {
+#if RENDER_ENABLE
     std::string vertexCode;
     std::string fragmentCode;
     std::ifstream vShaderFile;
@@ -90,6 +92,7 @@ shader::shader(const char *vertexPath, const char *fragmentPath)
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
+#endif
 }
 
 // activate shader program. Every shader and render call after glUseProgram will now use this program object.

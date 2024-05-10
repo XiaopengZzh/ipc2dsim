@@ -4,6 +4,8 @@
 
 #include "world.h"
 #include "Eigen/Core"
+#include "macros.h"
+#include "utils.h"
 
 void append(std::vector<std::pair<unsigned int, unsigned int>>& edges,
             const std::vector<std::pair<unsigned int, unsigned int>>& edgesToAdd)
@@ -112,7 +114,9 @@ void world::broadcastLocations()
             vert = physics.vertices[i];
             i++;
         }
+#if RENDER_ENABLE
         obj.updateVertexBuffer();
+#endif
     }
 }
 
@@ -137,4 +141,10 @@ void world::clear()
     objList.clear();
     physics = phyScene();
     // bRoundbouned?
+}
+
+void world::saveOBJ(unsigned int frameCount)
+{
+    ensure_directory_exists("../output/");
+    physics.saveOBJ(frameCount);
 }

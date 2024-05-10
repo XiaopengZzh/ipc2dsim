@@ -5,6 +5,7 @@
 #include "phyScene.h"
 #include "Eigen/Dense"
 #include <cmath>
+#include <fstream>
 #include "tight_inclusion/ccd.hpp"
 
 extern bool bUnitTest;
@@ -135,7 +136,7 @@ void phyScene::oneTimestepImpl(float dt)
 
         //debug
 
-
+        /*
         std::vector<float> temp3;
         for(float i : energyGradient)
         {
@@ -146,7 +147,7 @@ void phyScene::oneTimestepImpl(float dt)
         {
             temp4.push_back(i);
         }
-
+        */
 
         iter++;
     }
@@ -953,4 +954,27 @@ bool phyScene::vertexEdgeCCD(float &alpha, const Eigen::Vector2f &v0, const Eige
                                        0.0f, alpha, 1e-6, 1.0f, 1000, tor);
 
     return bCollide;
+}
+
+void phyScene::saveOBJ(unsigned int frameCount)
+{
+    std::string filename = "../output/scene_" + std::to_string(frameCount) + ".obj";
+    std::ofstream outFile(filename, std::ios::trunc);
+
+    if (!outFile.is_open()) {
+        std::cerr << "Can not open file\n";
+        return;
+    }
+
+    for (const auto& vertex : vertices) {
+        outFile << "v " << vertex.x() << " " << vertex.y() << " " << 0.0 << "\n";
+    }
+
+    for (const auto& face : eidx) {
+
+        outFile << "f " << face.x() + 1 << " " << face.y() + 1 << " " << face.z() + 1 << "\n";
+    }
+
+    outFile.close();
+
 }

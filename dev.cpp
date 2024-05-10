@@ -2,7 +2,7 @@
 #include "renderinit.h"
 #include "modelInit.h"
 #include "world.h"
-
+#include "macros.h"
 #include "Eigen/Dense"
 #include <chrono>
 
@@ -24,12 +24,14 @@ TEST_CASE("dev", "[development]")
     printf("This is a 2d simulation of Incremental Potential Contact Method.\n");
     printf("==================================================================\n");
 
+#if RENDER_ENABLE
     GLFWwindow* window = renderInit();
     //if(!window)
         //return -1;
     printf("window created.\n");
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+#endif
 
     std::shared_ptr<world> world = world::GetWorldInstance();
     modelInit();
@@ -56,22 +58,29 @@ TEST_CASE("dev", "[development]")
         deltaTime = dt;//used for camera moving
         previousTime = currentTime;
         elapsedTime += dt;
-
+#if RENDER_ENABLE
         processInput(window);
-
         glClearColor(0.3f, 0.4f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
 
         printf("### timestep : %d\n", totalFrameCount);
         //world->simulate(dt);
         world->simulate(0.01f);
 
+#if RENDER_ENABLE
         world->Draw(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
         bShouldClose = glfwWindowShouldClose(window);
-
+#elif OUTPUT_OBJ
+        if(totalFrameCount > 301)
+        {
+            bShouldClose = true;
+        }
+        world->saveOBJ(totalFrameCount);
+#endif
         totalFrameCount++;
     }
 

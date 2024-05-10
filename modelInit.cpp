@@ -4,6 +4,7 @@
 
 #include "modelInit.h"
 #include <catch2/catch_all.hpp>
+#include "macros.h"
 
 extern bool bUnitTest;
 
@@ -12,9 +13,11 @@ void modelInit()
     printf("initializing models...\n");
     std::shared_ptr<world> world = world::GetWorldInstance();
 
-    shader simshader("../shaders/vertex.vs", "../shaders/fragment.fs");
-    simshader.use();
 
+    shader simshader("../shaders/vertex.vs", "../shaders/fragment.fs");
+#if RENDER_ENABLE
+    simshader.use();
+#endif
     if(!bUnitTest)
     {
         world->CreateObject("../model/bent.xyz", EObjectType::DYNAMIC, simshader);
