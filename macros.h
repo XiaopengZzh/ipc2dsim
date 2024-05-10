@@ -12,7 +12,7 @@ const unsigned int SCR_HEIGHT = 600;
 #define ZFAR 1000.0f
 
 // set this to 0 if output obj file
-#define DISABLE_RENDER 1
+#define DISABLE_RENDER 0
 
 #if DISABLE_RENDER
 #define RENDER_ENABLE 0

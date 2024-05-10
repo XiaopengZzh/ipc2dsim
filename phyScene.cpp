@@ -951,7 +951,7 @@ bool phyScene::vertexEdgeCCD(float &alpha, const Eigen::Vector2f &v0, const Eige
     //bool bCollide = ticcd::vertexFaceCCD(tv0, tf00, tf10, tf20, tv1, tf01, tf11, tf21, {-1, -1, -1}, 0.001f, alpha, 1e-6, 1.0f, 100, tor)
     bool bCollide = ticcd::edgeEdgeCCD(tv0, tv0, tf00, tf10, tv1, tv1, tf01, tf11,
                                        Eigen::Array3f::Constant(-1.0f),
-                                       0.0f, alpha, 1e-6, 1.0f, 1000, tor);
+                                       1e-15f, alpha, 1e-6, 1.0f, 1000, tor);
 
     return bCollide;
 }
