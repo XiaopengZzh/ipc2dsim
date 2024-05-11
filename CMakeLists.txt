@@ -29,11 +29,14 @@ target_sources(${PROJECT_NAME}
 		repulsionCalc.cpp
 )
 
-find_package(Catch2 REQUIRED PATHS /opt/homebrew/lib/cmake/Catch2)
+# find_package(Catch2 REQUIRED PATHS /opt/homebrew/lib/cmake/Catch2)
+
+find_package(Catch2 REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC {CATCH2_INCLUDE_DIR})
 
 target_link_libraries(${PROJECT_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
 
-target_include_directories(${PROJECT_NAME} PRIVATE /opt/homebrew/include)
+# target_include_directories(${PROJECT_NAME} PRIVATE /opt/homebrew/include)
 
 find_package(Eigen3 REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
